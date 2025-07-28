@@ -1,0 +1,16 @@
+total 60
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 components
+-rw-rw-r-- 1 adrian adrian 1256 mar 18 00:20 deno.json
+-rwxrwxrwx 1 adrian adrian  209 mar 17 22:05 dev.ts
+-rw-rw-r-- 1 adrian adrian  535 mar 18 01:31 docker-compose.yml
+-rw-rw-r-- 1 adrian adrian  558 mar 18 01:22 Dockerfile
+-rw-rw-r-- 1 adrian adrian  160 mar 17 22:05 fresh.config.ts
+-rw-rw-r-- 1 adrian adrian 1059 mar 17 22:16 fresh.gen.ts
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 islands
+-rw-rw-r-- 1 adrian adrian  364 mar 17 22:05 main.ts
+-rw-rw-r-- 1 adrian adrian  554 mar 18 01:43 pipelight.yaml
+drwxrwxr-x 2 adrian adrian 4096 mar 18 00:35 prisma
+-rw-rw-r-- 1 adrian adrian  363 mar 17 22:05 README.md
+drwxrwxr-x 4 adrian adrian 4096 mar 17 22:16 routes
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 static
+-rw-rw-r-- 1 adrian adrian  155 mar 17 22:05 tailwind.config.ts

@@ -1,0 +1,72 @@
+{
+    "es": {
+        "title": "Como quieres pedir?",
+        "order_buttons": {
+            "automatize": "En tarjeta",
+            "manual": "Llama a un camaero"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Ver carta"
+        }
+    },
+    "en": {
+        "title": "How do you want to order?",
+        "order_buttons": {
+            "automatize": "By card",
+            "manual": "Call a waiter"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Show menu"
+        }
+    },
+    "fr": {
+        "title": "Comment voulez-vous commander?",
+        "order_buttons": {
+            "automatize": "Par carte",
+            "manual": "Appeler un serveur"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Voir la carte"
+        }
+    },
+    "de": {
+        "title": "Wie möchten Sie bestellen?",
+        "order_buttons": {
+            "automatize": "Mit Karte",
+            "manual": "Rufen Sie einen Kellner"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Speisekarte ansehen"
+        }
+    },
+    "it": {
+        "title": "Come vuoi ordinare?",
+        "order_buttons": {
+            "automatize": "Con carta",
+            "manual": "Chiama un cameriere"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Vedi il menu"
+        }
+    },
+    "ar": {
+        "title": "كيف تريد الطلب؟",
+        "order_buttons": {
+            "automatize": "بالبطاقة",
+            "manual": "اتصل بالنادل"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "عرض القائمة"
+        }
+    },
+    "ca-mall": {
+        "title": "Com vols demanar?",
+        "order_buttons": {
+            "automatize": "Amb targeta",
+            "manual": "Cridar a un cambrer"
+        },
+        "extrafunctionalities_buttons": {
+            "show_menu": "Veure carta"
+        }
+    }
+}

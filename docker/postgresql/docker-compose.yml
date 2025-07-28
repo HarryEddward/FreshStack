@@ -1,0 +1,32 @@
+
+services:
+  server:
+    image: bitnami/postgresql:16  # Imagen oficial de Bitnami
+    deploy:  # Configuración específica para Swarm
+      mode: replicated
+      replicas: 1  # Número de instancias (puedes escalar a más)
+      placement:
+        constraints:
+          - node.role == manager  # Ejecutar solo en el nodo manager (opcional)
+      restart_policy:
+        condition: on-failure  # Reiniciar si falla
+    environment:  # Variables de entorno para configurar PostgreSQL
+      - POSTGRESQL_USERNAME=adrian  # Usuario personalizado
+      - POSTGRESQL_PASSWORD=adrian_dark_draw_everything  # Contraseña del usuario
+      - POSTGRESQL_DATABASE=freshstack  # Nombre de la base de datos
+      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything  # Contraseña del usuario 'postgres'
+      - POSTGRESQL_ENABLE_POSTGIS=true  # Ejemplo de extensión (opcional)
+    volumes:
+      - /bitnami/postgresql:/bitnami/postgresql  # Persistencia de datos
+      #- ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+    ports:
+      - "5432:5432"  # Puerto expuesto (host:contenedor)
+    networks:
+      - fresh_framework_network  # Red personalizada
+
+volumes:
+  pg_data:  # Volumen para los datos persistentes
+
+networks:
+  fresh_framework_network:
+    external: true

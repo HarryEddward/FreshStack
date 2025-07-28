@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@font-face {
+  font-family: 'Sacred Bridge';
+  src: url('/fonts/sacred_bridge_demo.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Dh Pegita';
+  src: url('/fonts/dh_pegita.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Charlie Brown';
+  src: url('/fonts/charlie_brown.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.hola {
+  font-family: 'Dh Pegita', sans-serif;
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  margin-top: 20px;
+}

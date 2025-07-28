@@ -1,0 +1,7 @@
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
+image fresh_framework_deno_server:v1 could not be accessed on a registry to record
+its digest. Each node will access fresh_framework_deno_server:v1 independently,
+possibly leading to different nodes running different
+versions of the image.
+

@@ -1,0 +1,45 @@
+
+# 🔵 Frontend Backend Routing
+
+## Deno Module Routing
+---
+## /app
+
+### `@translations`
+Traducciónes enrutadas de forma coherente con las rutas de las pages de fresh cargando desde middlewares la ruta entregada al cliente con un `index.json` con su propia ruta. **Significa que por ahora no tienen rutas dinámicas, en proceso de buena implementación.**
+
+#### Variable Routing
+- `@translations/{route}/index.json` <span style={{color: "red"}}>&#91;Optional with warnings&#93;</span>
+
+#### Routing Coherence
+- `@routes`
+  
+
+
+
+### `@middleware`
+Middlewares enrutados de forma coherente con las rutas de las pages de fresh a través de los `index.ts` relacionadas a través dentro del `_middleware.ts` en las pages.
+
+#### Variable Routing
+- `@middleware/{route}/index.ts` <span style={{color: "blue"}}>&#91;Optional&#93;</span>
+
+#### Routing Coherence
+- `@routes`
+
+### `@type`
+Modulo para cargar tipados globales `{name}.d.ts` desde cualquier lado del proyecto sin problemas de improtaciónes, por nombre de la carpeta raiz en `/app`. Ej.: `middleware.d.ts`, `utils.d.ts` entre muchos otros. **No se aplico el nombramiento por @types porque genera conflictos internos del proyecto.**
+
+### `@utils`
+Utilidades sin coherencia usadas para pequeñas funcionalidades separadas de forma flexible.
+
+### `@islands`
+Referencia de las rutas de las islas que fresh utiliza.
+
+### `@components`
+Referencia de las rutas de los components que fresh utiliza.
+
+### `@routes`
+Referencia de las rutas de los pages que fresh utiliza.
+
+### `@static`
+Referencia de las rutas de los archivos estaticos que fresh utiliza.

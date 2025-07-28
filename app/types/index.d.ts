@@ -1,0 +1,1 @@
+export type IAllowLangs = 'ca-mall' | 'es' | 'de' | 'en' | 'fr' | 'ar' | 'it';

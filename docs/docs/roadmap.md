@@ -1,0 +1,47 @@
+---
+sidebar_position: 1
+---
+
+# Roadmap
+
+- ✅ Autenticación Multiplataforma con Keycloak y openid-client
+- ✅ Acceso por Auth Multidispositivo con Keycloak y openid-client
+- 🏗️ Creación de pedidos temporales en la App del Cliente
+- 🏗️ Aplicar el order id directamente en el QR a pagar
+- ✅ Aplicación directa al usuario autenticado web directo al panel de control
+- ✅ Solucionar la fallida redirección exitosa por tipo de dispositivo al verificar la licencia
+- ❌ Corregir errores, mejorar la coherencia y lógica del CLI de Fresh
+- 🏗️ Creación de notificación generales por web app
+- 🏗️ Creación de notificación generales por app web
+- ✅ Middleware de validación de sesiones por auth como accesso directo desde WWW por redireción a la Web App
+- ✅ Creación de la página principal de la Web App con accesso a todas las funcionalidades internas
+- 🏗️ Logout en web quitando los tokens sin eliminar la sesión en keycloak
+- 🏗️ Crear página ajustada para la web en dispositivos grandes (portatiles o pc) para la vista de la licencia
+- ✅ Dominio de desarrollo con SSL aplicado con Capacitor (Ngrok)
+- ✅ Verificar por Auth en SSR a tarvés de un middleware recursivo todas las sub-páginas de la web app
+- ✅ Crear rutas por Auth en Fastify para la gestión total de archivos por MinIO (mediante S3)
+- ✅ Remplazar MinIO por SeaweedFS, motivos: Licencias Restrictivas por falta de operatividad
+- 🏗️ Crear páginas operativas separadas de licencias difernetes, por parte las sublicencias de los empleados unicamente en la App Web Employee mientras unicamente la licencia directa de la empresa en la Web App y la App Web Client
+- 🏗️ Funcionalidad de la App Web Users para añadir usuarios usando Prisma
+- ✅ Generar sublicencias para sus empleados de uso desde la empresa emititda la licencia desde Zenstack
+- ✅ Nube privada con SeaweedFS operativa
+- ✅ Solventar problemas de identidad desde la instancia s3 de SeaweedFS
+- ✅ Aplicación SeaweedFS como plugin en Fastify por instancia de s3 (2025/7/18)
+- ✅ Sanetizar las rutas por S3 (2025/7/18)
+- ❌ Aplicar en el CLI de Fastify aplicar de forma predetemrinada envios por JSON's estandarizados en Content-Type: application/json (2025/7/18)
+- ✅ Aplicar SeaweedFS directamente en rutas desde Fastify (mediante la estandarización de S3)
+- ✅ Aplicación de Auth en SSR desde todas las rutas protegidas en Client App desde Keycloak. (2025/7/21)
+- ✅ Aplicación de imagenes de SeaweedFS a Fresh por instancia S3 por HTTPS (2025/7/21)
+- ✅ Solución de bugs por UI en PanelProducts.tsx y BasketModal.tsx al aplicar Flex centrado con imagenes. (2025/7/21)
+- ✅ Problema de Host-based Cookie Scoping en https://freshclientapp.ngrok.app/ con peticiones en CSR con credenciales por la API de Fastify en modo Desarrollo en el host https://10.241.157.225:3800 (SSL Autofirmado) (2025/7/21)
+- ✅ Resolver en el Modal de BasktModal.tsx el problema referencia en s3 imagenes inexistentes con una imagen prestablecida (2025/7/25)
+- 🏗️ Refatorizar middlewares referenciados a licencias separandolos de forma independiente y modular en Fresh (2025/7/25)
+- 🏗️ Solucionar problema temporal para producción usando Treafik para aplicar cookies entre la API de Fastify y la web Fresh como enrutador de un único dominio, temporalmente no usando Capacitor unicamente en red privada con ZeroTier. El problema surge cuando las cookies no se pueden pasar por peticiones CSR en diferentes dominios dentro de la web. (2025/7/21)
+- ❌ Crear un componente de Preact para la gestión con IndexDB sobre los objetos blob
+- ❌ Eliminar la configuración de SSL autofiramdo en Android a producción (res/xml/network_security_config.xml)
+- ❌ Normalizar configuración ENV's
+- ❌ Segurar secretos a producción en Docker Swarm
+- ❌ Gestión de imagenes (únicamente por webp, previamente procesadas comprimidas) persistentes por MinIO aplicado a Auth en Fastify
+- ❌ Optimización en Fresh con patrones Singleton y logs unicamente por desarrollo
+- ❌ Aplicar todos los programas a producción a través de Docker Swarm (Fresh, Jenkins, Redis (Clusters), MinIO, Keycloak, Fastify, Treafik, Postgresql, Cadvisor)
+- ❌ Refactorizar middlewares de aplicación sin recursion por rutas

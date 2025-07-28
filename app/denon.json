@@ -1,0 +1,20 @@
+{
+    "scripts": {
+        "server": {
+            "cmd": "deno task start",
+            "desc": "Ejecutar el servidor con hot-reload",
+            "watch": false
+        },
+        "capacitor": {
+            "cmd": "npx cap copy android && npx cap run android --no-sync -l --host 10.241.157.225 --port 8000 --target 0C84116I23104152",
+            "desc": "Ejecutar el servidor con hot-reload",
+            "watch": false
+        }
+    },
+    "watcher": {
+        "paths": ["./islands", "./routes", "./static", "./components", "./prisma"],
+        "extensions": ["ts", "tsx", "js", "jsx"]
+    },
+    "watch": true,
+    "unstable": true
+}

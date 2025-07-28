@@ -1,0 +1,14 @@
+total 52
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 components
+-rw-rw-r-- 1 adrian adrian 1256 mar 18 00:20 deno.json
+-rwxrwxrwx 1 adrian adrian  209 mar 17 22:05 dev.ts
+-rw-rw-r-- 1 adrian adrian  160 mar 17 22:05 fresh.config.ts
+-rw-rw-r-- 1 adrian adrian 1059 mar 17 22:16 fresh.gen.ts
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 islands
+-rw-rw-r-- 1 adrian adrian  364 mar 17 22:05 main.ts
+drwxrwxr-x 4 adrian adrian 4096 mar 18 00:20 node_modules
+-rw-rw-r-- 1 adrian adrian  244 mar 18 00:32 pipelight.yaml
+-rw-rw-r-- 1 adrian adrian  363 mar 17 22:05 README.md
+drwxrwxr-x 4 adrian adrian 4096 mar 17 22:16 routes
+drwxrwxr-x 2 adrian adrian 4096 mar 17 22:05 static
+-rw-rw-r-- 1 adrian adrian  155 mar 17 22:05 tailwind.config.ts

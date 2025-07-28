@@ -1,0 +1,18 @@
+
+services:
+  fastify:
+    image: fastify_api_server
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+    ports:
+      - "8300:8300"
+    networks:
+      - fresh_framework_network
+
+networks:
+  fresh_framework_network:
+    external: true

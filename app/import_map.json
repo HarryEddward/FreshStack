@@ -1,0 +1,7 @@
+{
+    "imports": {
+      "react": "https://esm.sh/preact@10.19.6/compat",
+      "react-dom": "https://esm.sh/preact@10.19.6/compat",
+      "$std/": "https://deno.land/std@0.216.0/"
+    }
+  }

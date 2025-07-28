@@ -1,0 +1,23 @@
+# pipeline.yml
+pipelines:
+  - name: creating-image-service-fresh
+    steps:
+      - name: Creating Docker Image Fresh Service
+        commands:
+          - docker build -t fresh_framework_deno_server:v1 .
+
+  - name: remove-fresh-service
+    steps:
+      - name: Removing Fresh service from Docker Swarm
+        commands:
+          - docker stack rm fresh
+
+  - name: docker-swarm-deployment
+    steps:
+      - name: Creating Network From Fresh Service
+        commands:
+          - docker network create --driver overlay --opt encrypted --scope swarm --attachable fresh_framework_network || true
+
+      - name: Upload Fresh Service to Docker Swarm
+        commands:
+          - docker stack deploy -c ${PWD}/docker-compose.yml fresh

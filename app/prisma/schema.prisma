@@ -1,0 +1,489 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BusinessBankInformation {
+  id                  String     @id @default(cuid())
+  bankName            String
+  ibanOrAccountNumber String
+  swiftBic            String?
+  accountHolderName   String
+  bankAddress         String?
+  currency            String
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime
+  businesses          businesses @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("business_bank_information")
+}
+
+model BusinessPaymentHistoryDetail {
+  id                       String                     @id @default(cuid())
+  description              String
+  amount                   Float
+  currency                 String
+  taxesIncluded            Boolean?
+  periodStart              DateTime?
+  periodEnd                DateTime?
+  businessId               String
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime
+  business_payment_history business_payment_history[]
+  businesses               businesses                 @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("business_payment_history_details")
+}
+
+model BusinessLicense {
+  id                    String        @id @default(cuid())
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?       @unique
+  stripePaymentIntentId String?       @unique
+  licenseType           LicenseType
+  plan                  LicensePlan
+  status                LicenseStatus
+  startDate             DateTime
+  endDate               DateTime?
+  isPaid                Boolean       @default(false)
+  lockinMonths          Int?
+  businessId            String
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime
+  businesses            businesses    @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([stripePaymentIntentId])
+  @@index([stripeSubscriptionId])
+  @@map("business_licenses")
+}
+
+model BusinessPayingCompany {
+  id         String     @id @default(cuid())
+  legalName  String
+  taxId      String     @unique
+  country    String
+  role       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("business_paying_companies")
+}
+
+model ClientOrder {
+  id                            String                         @id @default(cuid())
+  status                        OrderStatus                    @default(PENDING)
+  informationNotes              String?
+  tableServed                   String?
+  employeeServed                String?
+  refund                        Boolean                        @default(false)
+  businessId                    String
+  createdAt                     DateTime                       @default(now())
+  updatedAt                     DateTime
+  client_order_product_lines    client_order_product_lines[]
+  client_order_thermal_printers client_order_thermal_printers?
+  client_order_tickets          ClientOrderTicket?
+  client_order_transactions     ClientOrderTransaction[]
+  businesses                    businesses                     @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([status])
+  @@map("client_orders")
+}
+
+model ClientOrderTicket {
+  orderId       String      @id
+  tickets       Json
+  businessId    String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  businesses    businesses  @relation(fields: [businessId], references: [id])
+  client_orders ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("client_order_tickets")
+}
+
+model ClientOrderTransaction {
+  id                     String            @id @default(cuid())
+  orderId                String
+  externalTransactionId  String            @unique
+  transactionAmount      Float
+  transactionCurrencyIso String
+  status                 TransactionStatus
+  paymentMethod          PaymentMethod?
+  businessId             String
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime
+  businesses             businesses        @relation(fields: [businessId], references: [id])
+  client_orders          ClientOrder       @relation(fields: [orderId], references: [id])
+
+  @@index([businessId])
+  @@index([orderId])
+  @@index([status])
+  @@map("client_order_transactions")
+}
+
+model BusinessSupplierPicture {
+  id                            String                        @id @default(cuid())
+  supplierId                    String
+  url                           String
+  businessId                    String
+  createdAt                     DateTime                      @default(now())
+  updatedAt                     DateTime
+  businesses                    businesses                    @relation(fields: [businessId], references: [id])
+  business_supplier_information business_supplier_information @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([supplierId])
+  @@map("business_supplier_pictures")
+}
+
+model BusinessMenu {
+  id                           String                 @id @default(cuid())
+  title                        String
+  tags                         String?
+  nameLastModificationEmployee String?
+  businessId                   String
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime
+  business_menu_categories     BusinessMenuCategory[]
+  businesses                   businesses             @relation(fields: [businessId], references: [id])
+  business_products            BusinessProduct[]
+
+  @@index([businessId])
+  @@map("business_menus")
+}
+
+model BusinessMenuCategory {
+  id                           String       @id @default(cuid())
+  menuId                       String
+  vip                          Boolean      @default(false)
+  haveSchedule                 Boolean      @default(false)
+  schedule                     Json?
+  nameLastModificationEmployee String?
+  businessId                   String
+  createdAt                    DateTime     @default(now())
+  updatedAt                    DateTime
+  businesses                   businesses   @relation(fields: [businessId], references: [id])
+  business_menus               BusinessMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([menuId])
+  @@map("business_menu_categories")
+}
+
+model BusinessProduct {
+  id                           String       @id @default(cuid())
+  menuId                       String
+  name                         String
+  unityAmount                  Float
+  stockBatches                 Int[]
+  expirationDates              DateTime[]
+  unityConsumeStock            Int
+  typeUnitConsumeMeasurement   String
+  tags                         String?
+  nameLastModificationEmployee String?
+  businessId                   String
+  createdAt                    DateTime     @default(now())
+  updatedAt                    DateTime
+  businesses                   businesses   @relation(fields: [businessId], references: [id])
+  business_menus               BusinessMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([menuId])
+  @@index([name])
+  @@map("business_products")
+}
+
+model BusinessGeneralSalesReportAI {
+  id         String     @id @default(cuid())
+  url        String     @unique
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("business_general_sales_reports_ai")
+}
+
+model BusinessGeneralWarehouseReportAI {
+  id         String     @id @default(cuid())
+  url        String     @unique
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("business_general_warehouse_reports_ai")
+}
+
+model BusinessWarehouseReplenishmentReportAI {
+  id         String     @id @default(cuid())
+  url        String     @unique
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("business_warehouse_replenishment_reports_ai")
+}
+
+model business_commercial_relationship_documents_attached {
+  id                                String                            @id
+  url                               String
+  commercialRelationshipId          String
+  createdAt                         DateTime                          @default(now())
+  updatedAt                         DateTime
+  business_commercial_relationships business_commercial_relationships @relation(fields: [commercialRelationshipId], references: [id], onDelete: Cascade)
+
+  @@index([commercialRelationshipId])
+}
+
+model business_commercial_relationships {
+  id                                                  String                                                @id
+  type                                                String
+  signedContract                                      Boolean?
+  thirdPartyPaymentPermission                         Boolean?
+  createdAt                                           DateTime                                              @default(now())
+  updatedAt                                           DateTime
+  business_commercial_relationship_documents_attached business_commercial_relationship_documents_attached[]
+  businesses                                          businesses                                            @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model business_compliance {
+  id                       String     @id
+  kycVerified              Boolean?
+  amlApproved              Boolean?
+  taxWithholdingApplicable Boolean?
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime
+  businesses               businesses @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model business_configurations {
+  id                 String     @id
+  wifi               Json?
+  schedule           Json?
+  functionsActivated Json?
+  apiKey             Json?
+  affiliate          Boolean?   @default(false)
+  maxPhonesDevices   Int?       @default(30)
+  displayUsername    String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime
+  businesses         businesses @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model business_employees {
+  id                               String                             @id
+  nameEmployee                     String
+  businessId                       String
+  createdAt                        DateTime                           @default(now())
+  updatedAt                        DateTime
+  businesses                       businesses                         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business_employees_clock_records business_employees_clock_records[]
+
+  @@unique([businessId, nameEmployee])
+  @@index([businessId])
+}
+
+model business_employees_clock_records {
+  id                 String             @id
+  employeeId         String
+  recordTime         DateTime
+  businessId         String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  businesses         businesses         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business_employees business_employees @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([employeeId])
+  @@index([recordTime])
+}
+
+model business_payment_history {
+  id                               String                       @id
+  businessId                       String
+  paymentDetailId                  String
+  amount                           Float
+  currency                         String
+  type                             String
+  status                           String
+  stripeInvoiceId                  String?
+  createdAt                        DateTime                     @default(now())
+  updatedAt                        DateTime
+  businesses                       businesses                   @relation(fields: [businessId], references: [id])
+  business_payment_history_details BusinessPaymentHistoryDetail @relation(fields: [paymentDetailId], references: [id])
+
+  @@unique([businessId, paymentDetailId, createdAt], map: "business_payment_history_unique_idx")
+  @@index([businessId])
+  @@index([paymentDetailId])
+}
+
+model business_phone_ids {
+  id         String     @id
+  title      String
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+}
+
+model business_supplier_information {
+  id                         String                    @id
+  inUse                      Boolean                   @default(true)
+  title                      String
+  description                String?
+  schedule                   Json?
+  businessId                 String
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime
+  businesses                 businesses                @relation(fields: [businessId], references: [id])
+  business_supplier_pictures BusinessSupplierPicture[]
+
+  @@index([businessId])
+}
+
+model business_supporting_documents {
+  id                                 String     @id
+  serviceContract                    Boolean?
+  issuedInvoice                      Boolean?
+  thirdPartyPaymentAgreement         Boolean?
+  ultimateBeneficialOwnerCertificate Boolean?
+  businessLicense                    Boolean?
+  createdAt                          DateTime   @default(now())
+  updatedAt                          DateTime
+  businesses                         businesses @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model business_supporting_documents_attached {
+  id         String     @id
+  url        String
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime
+  businesses businesses @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model businesses {
+  id                                          String                                   @id
+  legalName                                   String
+  taxId                                       String                                   @unique
+  phone                                       String
+  email                                       String                                   @unique
+  registeredAddress                           String
+  countryOfIncorporation                      String
+  legalForm                                   String
+  legalRepresentative                         Json
+  createdAt                                   DateTime                                 @default(now())
+  updatedAt                                   DateTime
+  business_bank_information                   BusinessBankInformation?
+  business_commercial_relationships           business_commercial_relationships?
+  business_compliance                         business_compliance?
+  business_configurations                     business_configurations?
+  business_employees                          business_employees[]
+  business_employees_clock_records            business_employees_clock_records[]
+  business_general_sales_reports_ai           BusinessGeneralSalesReportAI[]
+  business_general_warehouse_reports_ai       BusinessGeneralWarehouseReportAI[]
+  business_licenses                           BusinessLicense[]
+  business_menu_categories                    BusinessMenuCategory[]
+  business_menus                              BusinessMenu[]
+  business_paying_companies                   BusinessPayingCompany?
+  business_payment_history                    business_payment_history[]
+  business_payment_history_details            BusinessPaymentHistoryDetail[]
+  business_phone_ids                          business_phone_ids[]
+  business_products                           BusinessProduct[]
+  business_supplier_information               business_supplier_information[]
+  business_supplier_pictures                  BusinessSupplierPicture[]
+  business_supporting_documents               business_supporting_documents?
+  business_supporting_documents_attached      business_supporting_documents_attached[]
+  business_warehouse_replenishment_reports_ai BusinessWarehouseReplenishmentReportAI[]
+  client_order_product_lines                  client_order_product_lines[]
+  client_order_thermal_printers               client_order_thermal_printers[]
+  client_order_tickets                        ClientOrderTicket[]
+  client_order_transactions                   ClientOrderTransaction[]
+  client_orders                               ClientOrder[]
+}
+
+model client_order_product_lines {
+  id              String      @id
+  orderId         String
+  productSnapshot Json
+  quantity        Int
+  subtotal        Float
+  businessId      String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime
+  businesses      businesses  @relation(fields: [businessId], references: [id])
+  client_orders   ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([orderId])
+}
+
+model client_order_thermal_printers {
+  orderId       String      @id
+  printers      String[]
+  businessId    String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  businesses    businesses  @relation(fields: [businessId], references: [id])
+  client_orders ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+enum LicenseType {
+  MONTHLY
+  LIFETIME
+}
+
+enum LicensePlan {
+  STANDARD
+  PREMIUM
+  ENTERPRISE
+  CUSTOM
+}
+
+enum LicenseStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELED
+  REFUNDED
+}
+
+enum TransactionStatus {
+  SUCCESSFUL
+  FAILED
+  PENDING
+}
+
+enum PaymentMethod {
+  DEBIT_CARD
+  CREDIT_CARD
+  CASH
+  OTHER
+}

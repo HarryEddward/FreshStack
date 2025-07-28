@@ -1,0 +1,31 @@
+version: '3.8'
+
+networks:
+  fresh_framework_network:
+    driver: overlay
+    external: true
+
+volumes:
+  minio_data:
+    driver: local
+
+services:
+  minio:
+    image: bitnami/minio:latest
+    ports:
+      - "9000:9000"   # Puerto para la API de S3 (HTTPS)
+      - "9001:9001"   # Puerto para la consola de MinIO (HTTPS)
+    environment:
+      - MINIO_ROOT_USER=minio-root-user
+      - MINIO_ROOT_PASSWORD=minio-root-password
+    #  - MINIO_SCHEME=https
+    volumes:
+      - minio_data:/bitnami/minio/data
+    #  - ./certs:/certs
+    networks:
+      - fresh_framework_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager

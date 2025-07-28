@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "start": "deno run --allow-read --allow-write index.ts",
+    "compile": "deno compile --allow-read --allow-write --output ./dist/cafebuy_bp_fresh index.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "commander": "npm:commander@^13.1.0",
+    "ejs": "npm:ejs@^3.1.10"
+  }
+  
+}
