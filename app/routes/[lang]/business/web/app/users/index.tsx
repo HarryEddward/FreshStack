@@ -27,6 +27,6 @@ export const handler: Handlers<unknown, State> = {
 export default function Index({ data }: PageProps<IGET_langBusinessWebAppUsersPayload>) {
 
   return (
-    <LangBusinessWebAppUsersIslandViewPage actualLang={data.actualLang}/>
+    <LangBusinessWebAppUsersIslandViewPage actualLang={data.actualLang} data={data}/>
   );
 }

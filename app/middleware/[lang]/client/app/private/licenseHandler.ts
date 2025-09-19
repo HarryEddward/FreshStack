@@ -119,10 +119,10 @@ export async function licenseHandler(
       }
   }));
 
-  console.log(`${config.mainApiUrl}/api/v1/model/businessPhone/findUnique?q=${queryBusinessPhone}`);
+  console.log(`${config.mainApiUrl}/api/v1/model/BusinessOrderUbication/findUnique?q=${queryBusinessPhone}`);
   const cookies = req.headers.get("cookie");
   console.log("Cookies: " + cookies);
-  const responseBusinessPhone = await fetch(`${config.mainApiUrl}/api/v1/model/businessPhone/findUnique?q=${queryBusinessPhone}`, {
+  const responseBusinessPhone = await fetch(`${config.mainApiUrl}/api/v1/model/BusinessOrderUbication/findUnique?q=${queryBusinessPhone}`, {
       method: "GET",
       headers: {
           "Content-Type": "application/json",

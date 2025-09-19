@@ -5,9 +5,9 @@ import drgam from 'dgram';
 
 // --- Configuración de tu entorno de Keycloak ---
 // DEBES reemplazar estos valores con los de tu configuración de Keycloak
-const KEYCLOAK_ISSUER: string = 'https://10.241.157.225:8187/realms/CafeBuy';
+const KEYCLOAK_ISSUER: string = 'https://10.241.157.225:8186/realms/cafebuy-realm';
 const KEYCLOAK_AUDIENCE: string = 'account'; // 'audience' del cliente, ej: 'account', 'mi-api', etc.
-const JWKS_URI: string = 'https://10.241.157.225:8187/realms/CafeBuy/protocol/openid-connect/certs';
+const JWKS_URI: string = 'https://10.241.157.225:8186/realms/cafebuy-realm/protocol/openid-connect/certs';
 
 
 

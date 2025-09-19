@@ -15,14 +15,14 @@ sidebar_position: 1
 - 🏗️ Creación de notificación generales por app web
 - ✅ Middleware de validación de sesiones por auth como accesso directo desde WWW por redireción a la Web App
 - ✅ Creación de la página principal de la Web App con accesso a todas las funcionalidades internas
-- 🏗️ Logout en web quitando los tokens sin eliminar la sesión en keycloak
-- 🏗️ Crear página ajustada para la web en dispositivos grandes (portatiles o pc) para la vista de la licencia
+- ✅ Logout en web quitando los tokens sin eliminar la sesión en keycloak
+- ✅ Crear página ajustada para la web en dispositivos grandes (portatiles o pc) para la vista de la licencia
 - ✅ Dominio de desarrollo con SSL aplicado con Capacitor (Ngrok)
 - ✅ Verificar por Auth en SSR a tarvés de un middleware recursivo todas las sub-páginas de la web app
 - ✅ Crear rutas por Auth en Fastify para la gestión total de archivos por MinIO (mediante S3)
 - ✅ Remplazar MinIO por SeaweedFS, motivos: Licencias Restrictivas por falta de operatividad
 - 🏗️ Crear páginas operativas separadas de licencias difernetes, por parte las sublicencias de los empleados unicamente en la App Web Employee mientras unicamente la licencia directa de la empresa en la Web App y la App Web Client
-- 🏗️ Funcionalidad de la App Web Users para añadir usuarios usando Prisma
+- ✅ Funcionalidad de la App Web Users para añadir usuarios usando Prisma
 - ✅ Generar sublicencias para sus empleados de uso desde la empresa emititda la licencia desde Zenstack
 - ✅ Nube privada con SeaweedFS operativa
 - ✅ Solventar problemas de identidad desde la instancia s3 de SeaweedFS
@@ -35,8 +35,24 @@ sidebar_position: 1
 - ✅ Solución de bugs por UI en PanelProducts.tsx y BasketModal.tsx al aplicar Flex centrado con imagenes. (2025/7/21)
 - ✅ Problema de Host-based Cookie Scoping en https://freshclientapp.ngrok.app/ con peticiones en CSR con credenciales por la API de Fastify en modo Desarrollo en el host https://10.241.157.225:3800 (SSL Autofirmado) (2025/7/21)
 - ✅ Resolver en el Modal de BasktModal.tsx el problema referencia en s3 imagenes inexistentes con una imagen prestablecida (2025/7/25)
-- 🏗️ Refatorizar middlewares referenciados a licencias separandolos de forma independiente y modular en Fresh (2025/7/25)
+- ✅ Refatorizar middlewares referenciados a licencias separandolos de forma independiente y modular en Fresh (2025/7/25)
+- ✅ Añadir calculadora para el úso practico del TPV a la Web App del Dashboard con integración con Ubicación de Pedidos Fijos para finalizar mas rapidamente los pedidos (2025/07/31)
 - 🏗️ Solucionar problema temporal para producción usando Treafik para aplicar cookies entre la API de Fastify y la web Fresh como enrutador de un único dominio, temporalmente no usando Capacitor unicamente en red privada con ZeroTier. El problema surge cuando las cookies no se pueden pasar por peticiones CSR en diferentes dominios dentro de la web. (2025/7/21)
+- ✅ Depurar nuevas imagenes separadas de Postgresql HA independiente con Keycloak Server junto con su porpio Postgresql HA
+- ✅ Keycloak realms autoamtizados (2025/9/10)
+- ✅ Integrando theme personalizado de Keycloakify a Keycloak (2025/9/10)
+- ✅ Keycloak puesto en HA con 1 pgbouncer (2025/9/10)
+- ✅ Autoamtización de setup servidores por Ansible
+- ✅ Compra del dominio "www.cafebuy.es" (2025/9/18)
+- ✅ Compra del SSL sobre el dominio "www.cafebuy.es" (2025/9/18)
+- ✅ Compra  de un servidor VPS (proveedor: OVHCloud) (2025/9/18)
+- ✅ Inicialización del setup en servidor VPS contratado (2025/9/18)
+- 🏗️ Aplicar variables sobre certificados SSL directamente como secretos en docker swarm
+- 🏗️ Cambiar de configuración de host en el archivo de autoamtización de Realms en Keycloak referenciado directamente en el dominio público
+- 🏗️ Crear entorno de pruebas directamente a producción sobre el VPS
+- 🏗️ Aplicar Treafik el OSWAP del plugin ModSecurity entrelazado a Fresh
+- 🏗️ Aplicar certificados a producción CA del SSL aplicado como proxy principal de Treafik
+- 🏗️ Pruebas de producción con Keycloak aplicado en SSL Wrapper con Treafik
 - ❌ Crear un componente de Preact para la gestión con IndexDB sobre los objetos blob
 - ❌ Eliminar la configuración de SSL autofiramdo en Android a producción (res/xml/network_security_config.xml)
 - ❌ Normalizar configuración ENV's

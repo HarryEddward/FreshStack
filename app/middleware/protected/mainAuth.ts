@@ -4,7 +4,7 @@ import { State } from "@middleware/sessionHandler.ts";
 import { oauth2Client } from "@utils/oauth_client.ts";
 
 // Constantes para seguridad
-const KEYCLOAK_USERINFO_URL = "http://localhost:8187/realms/CafeBuy/protocol/openid-connect/userinfo";
+const KEYCLOAK_USERINFO_URL = "http://localhost:8186/realms/cafebuy-realm/protocol/openid-connect/userinfo";
 const LOGIN_REDIRECT_URL = "/es/client/app/login";
 const TOKEN_REFRESH_MARGIN = 60 * 1000; // 60 segundos antes de expirar
 

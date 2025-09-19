@@ -28,6 +28,6 @@ export const handler: Handlers<unknown, State> = {
 export default function Index({ data }: PageProps<IGET_langBusinessWebAppDashboardPayload>) {
 
   return (
-    <LangBusinessWebAppDashboardIslandViewPage actualLang={data.actualLang}/>
+    <LangBusinessWebAppDashboardIslandViewPage actualLang={data.actualLang} data={data}/>
   );
 }

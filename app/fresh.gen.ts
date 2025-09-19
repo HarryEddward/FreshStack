@@ -74,10 +74,34 @@ import * as $_lang_business_web_app_dashboard_routes_validation from "./routes/[
 import * as $_lang_business_web_app_dashboard_analistics_index from "./routes/[lang]/business/web/app/dashboard/analistics/index.tsx";
 import * as $_lang_business_web_app_dashboard_configuration_index from "./routes/[lang]/business/web/app/dashboard/configuration/index.tsx";
 import * as $_lang_business_web_app_dashboard_index from "./routes/[lang]/business/web/app/dashboard/index.tsx";
+import * as $_lang_business_web_app_dashboard_inventory_routes_controller from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_controller.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_payload from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_payload.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_response from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_response.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_service from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_service.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_types from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_types.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_utils from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_utils.ts";
+import * as $_lang_business_web_app_dashboard_inventory_routes_validation from "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_validation.ts";
+import * as $_lang_business_web_app_dashboard_inventory_index from "./routes/[lang]/business/web/app/dashboard/inventory/index.tsx";
 import * as $_lang_business_web_app_dashboard_orders_index from "./routes/[lang]/business/web/app/dashboard/orders/index.tsx";
 import * as $_lang_business_web_app_dashboard_reports_index from "./routes/[lang]/business/web/app/dashboard/reports/index.tsx";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_controller from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_controller.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_payload from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_payload.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_response from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_response.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_service from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_service.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_types from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_types.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_utils from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_utils.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_routes_validation from "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_validation.ts";
+import * as $_lang_business_web_app_dashboard_suppliers_index from "./routes/[lang]/business/web/app/dashboard/suppliers/index.tsx";
 import * as $_lang_business_web_app_dashboard_warehouse_index from "./routes/[lang]/business/web/app/dashboard/warehouse/index.tsx";
 import * as $_lang_business_web_app_index from "./routes/[lang]/business/web/app/index.tsx";
+import * as $_lang_business_web_app_logout_routes_controller from "./routes/[lang]/business/web/app/logout/_routes/_controller.ts";
+import * as $_lang_business_web_app_logout_routes_payload from "./routes/[lang]/business/web/app/logout/_routes/_payload.ts";
+import * as $_lang_business_web_app_logout_routes_response from "./routes/[lang]/business/web/app/logout/_routes/_response.ts";
+import * as $_lang_business_web_app_logout_routes_service from "./routes/[lang]/business/web/app/logout/_routes/_service.ts";
+import * as $_lang_business_web_app_logout_routes_types from "./routes/[lang]/business/web/app/logout/_routes/_types.ts";
+import * as $_lang_business_web_app_logout_routes_utils from "./routes/[lang]/business/web/app/logout/_routes/_utils.ts";
+import * as $_lang_business_web_app_logout_routes_validation from "./routes/[lang]/business/web/app/logout/_routes/_validation.ts";
+import * as $_lang_business_web_app_logout_index from "./routes/[lang]/business/web/app/logout/index.tsx";
 import * as $_lang_business_web_app_multibusiness_routes_controller from "./routes/[lang]/business/web/app/multibusiness/_routes/_controller.ts";
 import * as $_lang_business_web_app_multibusiness_routes_payload from "./routes/[lang]/business/web/app/multibusiness/_routes/_payload.ts";
 import * as $_lang_business_web_app_multibusiness_routes_response from "./routes/[lang]/business/web/app/multibusiness/_routes/_response.ts";
@@ -241,6 +265,7 @@ import * as $index from "./routes/index.tsx";
 import * as $login from "./routes/login.tsx";
 import * as $sitemap_xml from "./routes/sitemap.xml.ts";
 import * as $hooks_useClientStore from "./islands/hooks/useClientStore.ts";
+import * as $hooks_useDebounceEffect from "./islands/hooks/useDebounceEffect.tsx";
 import * as $hooks_useRPCAPI from "./islands/hooks/useRPCAPI.ts";
 import * as $hooks_useRPCAPIRequestList from "./islands/hooks/useRPCAPIRequestList.ts";
 import * as $hooks_useRPCWebsockets from "./islands/hooks/useRPCWebsockets.ts";
@@ -248,6 +273,7 @@ import * as $hooks_useRPCWebsocketsRequestsList from "./islands/hooks/useRPCWebs
 import * as $hooks_useTimeFormatter from "./islands/hooks/useTimeFormatter.ts";
 import * as $providers_stores_websocketStore from "./islands/providers/stores/websocketStore.ts";
 import * as $redirect_index from "./islands/redirect/index.tsx";
+import * as $routes_global_FilePreviewInput from "./islands/routes/[global]/FilePreviewInput.tsx";
 import * as $routes_global_GenericSelect from "./islands/routes/[global]/GenericSelect.tsx";
 import * as $routes_global_QRScanner from "./islands/routes/[global]/QRScanner.tsx";
 import * as $routes_global_QrSvg from "./islands/routes/[global]/QrSvg.tsx";
@@ -263,8 +289,23 @@ import * as $routes_lang_business_app_NavigationBar from "./islands/routes/[lang
 import * as $routes_lang_business_app_ViewLicenseForm from "./islands/routes/[lang]/business/app/ViewLicenseForm.tsx";
 import * as $routes_lang_business_web_app_ViewPage from "./islands/routes/[lang]/business/web/app/ViewPage.tsx";
 import * as $routes_lang_business_web_app_analitics_ViewPage from "./islands/routes/[lang]/business/web/app/analitics/ViewPage.tsx";
+import * as $routes_lang_business_web_app_configurations_ConfigurationSettings from "./islands/routes/[lang]/business/web/app/configurations/ConfigurationSettings.tsx";
+import * as $routes_lang_business_web_app_configurations_FilesSettings from "./islands/routes/[lang]/business/web/app/configurations/FilesSettings.tsx";
+import * as $routes_lang_business_web_app_configurations_KeysSettings from "./islands/routes/[lang]/business/web/app/configurations/KeysSettings.tsx";
 import * as $routes_lang_business_web_app_configurations_ViewPage from "./islands/routes/[lang]/business/web/app/configurations/ViewPage.tsx";
+import * as $routes_lang_business_web_app_dashboard_Calculator from "./islands/routes/[lang]/business/web/app/dashboard/Calculator.tsx";
 import * as $routes_lang_business_web_app_dashboard_ViewPage from "./islands/routes/[lang]/business/web/app/dashboard/ViewPage.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_AjustmentPricesSettings from "./islands/routes/[lang]/business/web/app/dashboard/inventory/AjustmentPricesSettings.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_MenuSettings from "./islands/routes/[lang]/business/web/app/dashboard/inventory/MenuSettings.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ProductsSettings from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettings.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsCreateProduct from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsCreateProduct.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsEditorProduct from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsEditorProduct.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsEditorStock from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsEditorStock.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsViwer from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsViwer.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_StockSettings from "./islands/routes/[lang]/business/web/app/dashboard/inventory/StockSettings.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_ViewPage from "./islands/routes/[lang]/business/web/app/dashboard/inventory/ViewPage.tsx";
+import * as $routes_lang_business_web_app_dashboard_inventory_stores_storeProductSettings from "./islands/routes/[lang]/business/web/app/dashboard/inventory/[stores]/storeProductSettings.ts";
+import * as $routes_lang_business_web_app_dashboard_suppliers_ViewPage from "./islands/routes/[lang]/business/web/app/dashboard/suppliers/ViewPage.tsx";
 import * as $routes_lang_business_web_app_multibusiness_ViewPage from "./islands/routes/[lang]/business/web/app/multibusiness/ViewPage.tsx";
 import * as $routes_lang_business_web_app_users_ViewPage from "./islands/routes/[lang]/business/web/app/users/ViewPage.tsx";
 import * as $routes_lang_business_web_www_ButtonTrial from "./islands/routes/[lang]/business/web/www/ButtonTrial.tsx";
@@ -463,13 +504,61 @@ const manifest = {
       $_lang_business_web_app_dashboard_configuration_index,
     "./routes/[lang]/business/web/app/dashboard/index.tsx":
       $_lang_business_web_app_dashboard_index,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_controller.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_controller,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_payload.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_payload,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_response.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_response,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_service.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_service,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_types.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_types,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_utils.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_utils,
+    "./routes/[lang]/business/web/app/dashboard/inventory/_routes/_validation.ts":
+      $_lang_business_web_app_dashboard_inventory_routes_validation,
+    "./routes/[lang]/business/web/app/dashboard/inventory/index.tsx":
+      $_lang_business_web_app_dashboard_inventory_index,
     "./routes/[lang]/business/web/app/dashboard/orders/index.tsx":
       $_lang_business_web_app_dashboard_orders_index,
     "./routes/[lang]/business/web/app/dashboard/reports/index.tsx":
       $_lang_business_web_app_dashboard_reports_index,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_controller.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_controller,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_payload.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_payload,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_response.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_response,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_service.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_service,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_types.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_types,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_utils.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_utils,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/_routes/_validation.ts":
+      $_lang_business_web_app_dashboard_suppliers_routes_validation,
+    "./routes/[lang]/business/web/app/dashboard/suppliers/index.tsx":
+      $_lang_business_web_app_dashboard_suppliers_index,
     "./routes/[lang]/business/web/app/dashboard/warehouse/index.tsx":
       $_lang_business_web_app_dashboard_warehouse_index,
     "./routes/[lang]/business/web/app/index.tsx": $_lang_business_web_app_index,
+    "./routes/[lang]/business/web/app/logout/_routes/_controller.ts":
+      $_lang_business_web_app_logout_routes_controller,
+    "./routes/[lang]/business/web/app/logout/_routes/_payload.ts":
+      $_lang_business_web_app_logout_routes_payload,
+    "./routes/[lang]/business/web/app/logout/_routes/_response.ts":
+      $_lang_business_web_app_logout_routes_response,
+    "./routes/[lang]/business/web/app/logout/_routes/_service.ts":
+      $_lang_business_web_app_logout_routes_service,
+    "./routes/[lang]/business/web/app/logout/_routes/_types.ts":
+      $_lang_business_web_app_logout_routes_types,
+    "./routes/[lang]/business/web/app/logout/_routes/_utils.ts":
+      $_lang_business_web_app_logout_routes_utils,
+    "./routes/[lang]/business/web/app/logout/_routes/_validation.ts":
+      $_lang_business_web_app_logout_routes_validation,
+    "./routes/[lang]/business/web/app/logout/index.tsx":
+      $_lang_business_web_app_logout_index,
     "./routes/[lang]/business/web/app/multibusiness/_routes/_controller.ts":
       $_lang_business_web_app_multibusiness_routes_controller,
     "./routes/[lang]/business/web/app/multibusiness/_routes/_payload.ts":
@@ -773,6 +862,7 @@ const manifest = {
   },
   islands: {
     "./islands/hooks/useClientStore.ts": $hooks_useClientStore,
+    "./islands/hooks/useDebounceEffect.tsx": $hooks_useDebounceEffect,
     "./islands/hooks/useRPCAPI.ts": $hooks_useRPCAPI,
     "./islands/hooks/useRPCAPIRequestList.ts": $hooks_useRPCAPIRequestList,
     "./islands/hooks/useRPCWebsockets.ts": $hooks_useRPCWebsockets,
@@ -782,6 +872,8 @@ const manifest = {
     "./islands/providers/stores/websocketStore.ts":
       $providers_stores_websocketStore,
     "./islands/redirect/index.tsx": $redirect_index,
+    "./islands/routes/[global]/FilePreviewInput.tsx":
+      $routes_global_FilePreviewInput,
     "./islands/routes/[global]/GenericSelect.tsx": $routes_global_GenericSelect,
     "./islands/routes/[global]/QRScanner.tsx": $routes_global_QRScanner,
     "./islands/routes/[global]/QrSvg.tsx": $routes_global_QrSvg,
@@ -804,10 +896,40 @@ const manifest = {
       $routes_lang_business_web_app_ViewPage,
     "./islands/routes/[lang]/business/web/app/analitics/ViewPage.tsx":
       $routes_lang_business_web_app_analitics_ViewPage,
+    "./islands/routes/[lang]/business/web/app/configurations/ConfigurationSettings.tsx":
+      $routes_lang_business_web_app_configurations_ConfigurationSettings,
+    "./islands/routes/[lang]/business/web/app/configurations/FilesSettings.tsx":
+      $routes_lang_business_web_app_configurations_FilesSettings,
+    "./islands/routes/[lang]/business/web/app/configurations/KeysSettings.tsx":
+      $routes_lang_business_web_app_configurations_KeysSettings,
     "./islands/routes/[lang]/business/web/app/configurations/ViewPage.tsx":
       $routes_lang_business_web_app_configurations_ViewPage,
+    "./islands/routes/[lang]/business/web/app/dashboard/Calculator.tsx":
+      $routes_lang_business_web_app_dashboard_Calculator,
     "./islands/routes/[lang]/business/web/app/dashboard/ViewPage.tsx":
       $routes_lang_business_web_app_dashboard_ViewPage,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/AjustmentPricesSettings.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_AjustmentPricesSettings,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/MenuSettings.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_MenuSettings,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettings.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ProductsSettings,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsCreateProduct.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsCreateProduct,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsEditorProduct.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsEditorProduct,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsEditorStock.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsEditorStock,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ProductsSettingsViwer.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ProductsSettingsViwer,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/StockSettings.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_StockSettings,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/ViewPage.tsx":
+      $routes_lang_business_web_app_dashboard_inventory_ViewPage,
+    "./islands/routes/[lang]/business/web/app/dashboard/inventory/[stores]/storeProductSettings.ts":
+      $routes_lang_business_web_app_dashboard_inventory_stores_storeProductSettings,
+    "./islands/routes/[lang]/business/web/app/dashboard/suppliers/ViewPage.tsx":
+      $routes_lang_business_web_app_dashboard_suppliers_ViewPage,
     "./islands/routes/[lang]/business/web/app/multibusiness/ViewPage.tsx":
       $routes_lang_business_web_app_multibusiness_ViewPage,
     "./islands/routes/[lang]/business/web/app/users/ViewPage.tsx":

@@ -1,0 +1,8 @@
+{
+  "plugins": [
+    {
+      "name": "@core/json-schema",
+      "output": "src/generated/schemas"
+    }
+  ]
+}

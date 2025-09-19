@@ -4,52 +4,46 @@
     "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
     "manifest": "deno task cli manifest $(pwd)",
-    "start": "deno run -A --unstable-kv --unsafely-ignore-certificate-errors=10.241.157.225 --watch=static/,routes/ dev.ts",
+    "start": "deno run -A --unsafely-ignore-certificate-errors=10.241.157.225 --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "eslint": "deno run -A npm:eslint 'src/**/*.{ts,tsx}' --fix",
     "ngrok": "ngrok http --url=freshclientapp.ngrok.app https://10.241.157.225:8000"
   },
-  "lint": {
-    "rules": {
-      "tags": [
-        "fresh",
-        "recommended"
-      ]
-    }
-  },
-  "exclude": [
-    "**/_fresh/*"
-  ],
+  "lint": { "rules": { "tags": ["fresh", "recommended"] } },
+  "exclude": ["**/_fresh/*"],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
-    "@capacitor/android": "npm:@capacitor/android@^7.1.0",
-    "@capacitor/cli": "npm:@capacitor/cli@^7.1.0",
-    "@capacitor/core": "npm:@capacitor/core@^7.1.0",
-    "@capacitor/ios": "npm:@capacitor/ios@^7.1.0",
+    "$std/": "https://deno.land/std@0.216.0/",
+    "oauth4webapi": "https://deno.land/x/oauth4webapi@v2.10.4/mod.ts",
+    "nanoid": "https://deno.land/x/nanoid/mod.ts",
+    
     "@cmd-johnson/oauth2-client": "jsr:@cmd-johnson/oauth2-client@^2.0.0",
     "@findhow/zod-factory": "jsr:@findhow/zod-factory@^0.0.2",
     "@fresh-stack/zustand": "jsr:@fresh-stack/zustand@^0.1.7",
     "@oak/oak": "jsr:@oak/oak@^17.1.4",
+
     "typescript": "npm:typescript@^5.5.4",
     "djwt": "npm:djwt@^2.0.0",
     "oauth2_client": "npm:oauth2_client@^0.0.3",
     "openid-client": "npm:openid-client@^6.3.4",
-    "preact": "https://esm.sh/preact@10.22.0",
     "preact-motion": "npm:preact-motion@^1.2.0",
-    "preact/": "https://esm.sh/preact@10.22.0/",
-    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
-    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "@preact-material-components": "npm:preact-material-components",
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
     "tailwindcss/plugin": "npm:/tailwindcss@3.4.1/plugin.js",
-    "$std/": "https://deno.land/std@0.216.0/",
-    "oauth4webapi": "https://deno.land/x/oauth4webapi@v2.10.4/mod.ts",
+    "tailwindcss-animate": "npm:tailwindcss-animate@1.0.7",
+
+    "preact": "https://esm.sh/preact@10.22.0",
+    "preact/": "https://esm.sh/preact@10.22.0/",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "react": "https://esm.sh/preact@10.22.0/compat",
     "react-dom": "https://esm.sh/preact@10.22.0/compat",
     "next-barcode": "https://esm.sh/next-barcode@1.5.0?alias=react:preact/compat,react-dom:preact/compat&deps=preact@10.22.0",
+    "framer-motion": "https://esm.sh/v135/framer-motion@^11.11.13?target=es2022&alias=react:preact/compat,react-dom:preact/compat&deps=preact@10.22.0",
+    
     "@components/": "./components/",
     "@islands/": "./islands/",
     "@routes/": "./routes/",
@@ -59,16 +53,9 @@
     "@orm/": "./orm/",
     "@config/": "./config/",
     "@translations/": "./translations/",
-    "@middleware/": "./middleware/",
-    "nanoid": "https://deno.land/x/nanoid/mod.ts",
-    "framer-motion": "https://esm.sh/v135/framer-motion@^11.11.13?target=es2022&alias=react:preact/compat,react-dom:preact/compat&deps=preact@10.22.0",
-    "tailwindcss-animate": "npm:tailwindcss-animate@1.0.7"
+    "@middleware/": "./middleware/"
+
   },
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  },
+  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
   "nodeModulesDir": "auto"
 }
-
-

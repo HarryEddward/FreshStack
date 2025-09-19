@@ -7,6 +7,7 @@ import { State } from "@middleware/sessionHandler.ts";
 
 export interface IGET_langBusinessWebAppDashboardPayload {
     actualLang: string;
+    businessId: string;
 }
 
 export const GET_langBusinessWebAppDashboardPayload = async (
@@ -16,10 +17,12 @@ export const GET_langBusinessWebAppDashboardPayload = async (
     
     const session = ctx.state.sessions?.["sessionId"];
     const actualLang = await session.store.get<string>("lang") || "ca-mall";
+    const businessId = await session.store.get<string>("business_id") || "";
     
     
     return {
-        actualLang
+        actualLang,
+        businessId
     }
 }
 

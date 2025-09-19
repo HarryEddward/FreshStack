@@ -1,0 +1,156 @@
+---
+- name: Instalación simple de Docker
+  hosts: webservers
+  become: yes
+  
+  tasks:
+    # Actualizar el sistema
+    - name: Actualizar cache de apt
+      apt:
+        update_cache: yes
+
+    - name: Actualizar paquetes del sistema
+      apt:
+        upgrade: dist
+
+    # Instalar dependencias
+    - name: Instalar dependencias para Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    # Limpiar instalaciones previas
+    - name: Remover versiones antiguas de Docker
+      apt:
+        name:
+          - docker
+          - docker-engine
+          - docker.io
+          - containerd
+          - runc
+        state: absent
+
+    # Crear directorio para llaves
+    - name: Crear directorio para llaves
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    # Añadir clave GPG (comando directo)
+    - name: Añadir clave GPG de Docker
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        chmod a+r /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    # Detectar la versión de Ubuntu automáticamente
+    - name: Detectar versión de Ubuntu
+      shell: lsb_release -cs
+      register: ubuntu_version
+      changed_when: false
+
+    # Añadir repositorio
+    - name: Añadir repositorio de Docker
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
+        state: present
+        filename: docker
+
+    # Actualizar cache
+    - name: Actualizar cache después de añadir repositorio
+      apt:
+        update_cache: yes
+
+    # Instalar Docker
+    - name: Instalar Docker Engine
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    # Iniciar Docker
+    - name: Iniciar y habilitar Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    # Verificar instalación
+    - name: Verificar Docker
+      command: docker --version
+      register: docker_check
+      changed_when: false
+
+    - name: Mostrar resultado
+      debug:
+        msg: "✅ Docker instalado: {{ docker_check.stdout }}"
+
+    # INICIALIZACIÓN DE DOCKER SWARM
+    - name: Verificar si Docker Swarm ya está activo
+      shell: docker info --format '{{ "{{" }}.Swarm.LocalNodeState{{ "}}" }}'
+      register: swarm_status
+      changed_when: false
+      failed_when: false
+
+    - name: Mostrar estado actual de Swarm
+      debug:
+        msg: "🔍 Estado de Docker Swarm: {{ swarm_status.stdout | default('inactivo') }}"
+
+    - name: Inicializar Docker Swarm
+      shell: docker swarm init
+      register: swarm_init
+      when: swarm_status.stdout != "active"
+      
+    - name: Mostrar resultado de inicialización de Swarm
+      debug:
+        msg: "🐳 Docker Swarm inicializado correctamente"
+      when: swarm_init.changed | default(false)
+      
+    - name: Obtener token de manager
+      shell: docker swarm join-token manager -q
+      register: manager_token
+      when: swarm_status.stdout == "active" or swarm_init.changed
+      changed_when: false
+      
+    - name: Obtener token de worker
+      shell: docker swarm join-token worker -q
+      register: worker_token  
+      when: swarm_status.stdout == "active" or swarm_init.changed
+      changed_when: false
+
+    - name: Obtener IP del nodo manager
+      shell: docker info --format '{{ "{{" }}.Swarm.NodeAddr{{ "}}" }}'
+      register: manager_ip
+      when: swarm_status.stdout == "active" or swarm_init.changed
+      changed_when: false
+
+    - name: Mostrar información completa del cluster
+      debug:
+        msg: |
+          🎉 ¡Docker y Swarm configurados correctamente!
+          
+          📋 INFORMACIÓN DEL CLUSTER:
+          🖥️  Servidor: {{ inventory_hostname }}
+          🆔 IP Manager: {{ manager_ip.stdout | default('N/A') }}
+          🐳 Estado Swarm: {{ 'Inicializado' if (swarm_init.changed | default(false)) else 'Ya estaba activo' }}
+          
+          🔑 TOKENS PARA UNIR OTROS NODOS:
+          👑 Manager Token: {{ manager_token.stdout | default('N/A') }}
+          👷 Worker Token: {{ worker_token.stdout | default('N/A') }}
+          
+          📝 COMANDOS PARA UNIR NODOS:
+          # Para añadir un manager:
+          docker swarm join --token {{ manager_token.stdout | default('MANAGER_TOKEN') }} {{ manager_ip.stdout | default('MANAGER_IP') }}:2377
+          
+          # Para añadir un worker:
+          docker swarm join --token {{ worker_token.stdout | default('WORKER_TOKEN') }} {{ manager_ip.stdout | default('MANAGER_IP') }}:2377
+      when: swarm_status.stdout == "active" or swarm_init.changed

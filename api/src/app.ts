@@ -95,6 +95,11 @@ export async function build(opts = {
         
         ...opts,
     }).withTypeProvider<JsonSchemaToTsProvider>();
+    app.register(require('@fastify/under-pressure'), {
+        maxEventLoopDelay: 1000,
+        message: 'Under pressure!',
+        retryAfter: 50
+    })
     app.register(swaggerPlugin);
     app.register(cors, {
         origin: true, //'https://freshclientapp.ngrok.app',
@@ -153,7 +158,7 @@ export async function build(opts = {
             //fieldNameSize: 100, // Max field name size in bytes
             //fieldSize: 100,     // Max field value size in bytes
             //fields: 10,         // Max number of non-file fields
-            fileSize: bytes('5MB') || 5 * 1024 * 1024,  // For multipart forms, the max file size in bytes
+            fileSize: bytes('15MB') || 15 * 1024 * 1024,  // For multipart forms, the max file size in bytes
             files: 1,           // Max number of file fields
             //headerPairs: 2000,  // Max number of header key=>value pairs
             //parts: 1000         // For multipart forms, the max number of parts (fields + files)

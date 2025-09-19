@@ -23,7 +23,7 @@ async function uploadFile(
   filePath: string,
   objectPath: string,
   sessionId: string,
-  apiUrl: string = 'https://10.241.157.225:3800/api/v1/private/s3/object',
+  apiUrl: string = 'https://10.241.157.225:3800/api/v1/private/services/zenstack/BusinessProduct/create',
 ): Promise<void> {
   try {
     // Verificar que el archivo exista
@@ -36,12 +36,29 @@ async function uploadFile(
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath), {
       filename: path.basename(filePath),
-      contentType: 'application/pdf', // Ajusta según el tipo de archivo
+      contentType: 'image/webp', // Ajusta según el tipo de archivo
     });
+    form.append('data', JSON.stringify(
+      /*{
+        productId: "cmddiorrm00002u25dbblse9u",
+        fileId: "asdasdadjasldja"
+      }*/
+      {
+        name: "OtraInfo",
+        menuId: "cmdbxrjvw00022u5xpiyl5jo1",
+        unityAmount: 40,
+        unityConsumeStock: 1,
+        unityConsumePrice: 1.4,
+        typeUnitConsumeMeasurement: "string",
+        nameLastModificationEmployee: "string",
+        preparationDuration: 10 * 60,
+        tags: "hola que tal"
+      }
+    ));
 
     // Configurar la petición
-    const response = await axios.post<ApiResponse>(
-      `${apiUrl}/${objectPath}`,
+    const response = await axios.put<ApiResponse>(
+      `${apiUrl}`,
       form,
       {
         headers: {
@@ -83,8 +100,8 @@ async function uploadFile(
 
 // Configuración de la prueba
 const filePath = './upload/image.webp'; // Asegúrate de que app.pdf esté en el directorio
-const objectPath = 'businessId/image';
-const sessionId = 'VDJhRFRSTzU4LXRWYWhEdkdoeTZq.k3pmXbG3mwIsZAy8F7dkdOjhu5+FKiOcIc+vz3LsKIA';
+const objectPath = 'image';
+const sessionId = 'bW9sMHNqSFVzZjBZTUxsQ094Y29U.ffVe1wIGDRm6MeLcNStlcDrgNYCLyOVm4BKigWVOeVA';
 
 // Ejecutar la prueba
 uploadFile(filePath, objectPath, sessionId).then(() => {

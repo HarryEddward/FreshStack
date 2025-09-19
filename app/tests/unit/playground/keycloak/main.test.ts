@@ -7,8 +7,8 @@ import { OAuth2Client } from "jsr:@cmd-johnson/oauth2-client";
 
 const client = new OAuth2Client({
   clientId: "fresh-client-mobile",
-  tokenUri: "http://10.241.157.225:8187/realms/CafeBuy/protocol/openid-connect/token",
-  authorizationEndpointUri: "http://10.241.157.225:8187/realms/CafeBuy/protocol/openid-connect/auth",
+  tokenUri: "http://10.241.157.225:8186/realms/cafebuy-realm/protocol/openid-connect/token",
+  authorizationEndpointUri: "http://10.241.157.225:8186/realms/cafebuy-realm/protocol/openid-connect/auth",
   defaults: { scope: "openid profile email" },
 });
 
@@ -26,8 +26,8 @@ Deno.test("Autenticación: flujo completo con credenciales válidas", async () =
 
   const client = new OAuth2Client({
     clientId: "fresh-client-mobile",
-    tokenUri: "https://10.241.157.225:8187/realms/CafeBuy/protocol/openid-connect/token",
-    authorizationEndpointUri: "https://10.241.157.225:8187/realms/CafeBuy/protocol/openid-connect/auth",
+    tokenUri: "https://10.241.157.225:8186/realms/cafebuy-realm/protocol/openid-connect/token",
+    authorizationEndpointUri: "https://10.241.157.225:8186/realms/cafebuy-realm/protocol/openid-connect/auth",
     defaults: { scope: "openid profile email" },
   });
   

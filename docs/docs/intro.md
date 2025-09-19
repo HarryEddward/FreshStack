@@ -9,11 +9,12 @@ sidebar_position: 1
 
 ### Programa Liviano Empresarial
 
-Suite empresrial de gestión de negocios para hostelería enfocado a pymes.
+Suite empresrial moderno de gestión de negocios para hostelería enfocado a pymes.
 
 Proposito:
 - **Mejorar el flujo de caja y el flujo de los pedidos** de cafeterias o hostelería de una forma minimalista rápida y efectiva.
 - **Aplica Anliticas y ventas conjuntamente con configruaciones mas autoamtizadas en todo el negocio** con generación de informes PDF's con IA hasta manejar de una forma completa y unificada tu negocio, como el manejo de pedidos manuales de parte la app del staff al fin generando el mismo staff los reembolsos y los tickets a un simple click del pedido.
+- **Integración interconectado por multifunciones avanzadas** aplicandose a integración difernetes componentes de la aplicación por la integración cohesiva y para reducir comportamientos manuales juntandose con difernetes funciones. Ej.: Usar una calaculadora donde se pueda finalizar un pedido automaticamente a la hora de calcular, imprimir ticket y recibir el cambio del cobro.
 
 
 ### Integración del Programa
@@ -44,10 +45,10 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 
 
 ### Caracteríticas técnicas
-- IAM: **Keyclok**
-- API: **Fastify + Zenstack (Fastify Generator API CRUD Adapter for Prisma)**
-- Infrastructure Multimedia Storage: **Seaweed FS**
-- DB: **PostgreSQL**
+- IAM: **Keycloak (HA) / Keycloakify (UI Theme) / Automatized Json Realm**
+- API: **Fastify + Zenstack (Fastify Generator API CRUD + RBAC Auth Adapter for Prisma)**
+- Infrastructure Multimedia Storage: **SeaweedFS (Instancia S3)**
+- Persistant Database (HA): **PostgreSQL / repmgr / pgbouncer**
 - CI/CD: **Jenkins**
 - Server: **Fresh (Deno) (Frontend & Backend)**
 - ORM: **Prisma**
@@ -55,7 +56,7 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 - Métricas: **cAdvisor / Promethus / Grafana**
 - Contenedores: **Docker (Imágenes: Bitnami)**
 - Orquestador de contenedores: **Docker Swarm**
-- Datos temporales/Sessiones: **Redis (clusters)**
+- Cache Database: **Redis (Redis Cluster / Redis Sentinel)**
 - Docs: **Docosaurus**
 - Client Payment: **Stripe / Tap To Pay (SDK)**
 - Business Payment: **Stripe**
@@ -63,6 +64,16 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 - Third-Party Multimedia Exporter: **Google Drive**
 - CLI (Anit-boilerplate for Fresh & Fastify): **Commander.js**
 - Generación de informes en PDF's: **LaTeX**
+- Aplicación móvil para el Cliente: **Capacitor (SSR Embded)**
+- Aplicación móvil para el Empleado: **React Native Expo**
+- OWASP: **Traefik Modsecurity Plugin**
+- Automatize Installation Servers: **Ansible**
+
+### Aspectos ténicos de Escalamiento Horizontal (HS)
+Maneja por la conexión de los nodos sel mismo programa por ejemplo indpendiente del orquestador (Docker Swarm) a aplicarse, o puede ser aplicado por servicios contenarizados que se lanzan del mismo orquestador.
+
+### Aspectos ténicos de Escalamiento Vertical (VS)
+Aquí Docker Swarm limita las capacidades de los servicios del stack y puede gestiónar eficientemente los recursos de varios servicios.
 
 ### Como es el modelo del negocio?
 Es un modelo de distribucción **SaaS**, para usarse sin problemas de infarestructura para cualquier empresa de forma muy intuitiva

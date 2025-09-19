@@ -1,0 +1,2 @@
+# userlist.txt para la base de datos general
+"adrian" "md58c17a87a221f37e452a3925d2a843940"

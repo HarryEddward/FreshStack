@@ -49,7 +49,7 @@ export default function langBusinessWebWWW({ data }: PageProps<IGET_langBusiness
     return (
         <>
         <div className={"w-full w-full"}>
-            <LangBusinessWebWWWComponentBusinessHeader/>
+            {/*<LangBusinessWebWWWComponentBusinessHeader/>*/}
             <LangBusinessWebWWWComponentNavbar/>
             <LangBusinessWebWWWIslandTrustedByCarousel/>
             

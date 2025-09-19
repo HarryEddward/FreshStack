@@ -62,7 +62,7 @@ const config = {
     appOrigin: process.env.KEYCLOAK_APP_ORIGIN || 'https://localhost:3000',
     keycloakSubdomain,
     clientId: required(process.env.KEYCLOAK_CLIENT_ID, 'KEYCLOAK_CLIENT_ID'),
-    realm: process.env.KEYCLOAK_REALM || 'CafeBuy',
+    realm: process.env.KEYCLOAK_REALM || 'cafebuy-realm',
     secret: required(process.env.KEYCLOAK_CLIENT_SECRET, 'KEYCLOAK_CLIENT_SECRET'),
     issuerUrl: 'https://' + keycloakSubdomain + '/.well-known/openid-configuration'
   },

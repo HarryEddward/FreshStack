@@ -26,7 +26,7 @@ const backendApiConfigHost = Deno.env.get("BACKEND_CONFIG_HOST") || "localhost";
 const backendApiConfigSSL = Deno.env.get("BACKEND_CONFIG_SSL") === "true" || false;
 
 
-const keycloakEndpoint = Deno.env.get("KEYCLOAK_ENDPOINT") || "https://10.241.157.225:8187";
+const keycloakEndpoint = /*Deno.env.get("KEYCLOAK_ENDPOINT") ||*/ "http://10.241.157.225:8186";
 const keycloakSubdomain = required(Deno.env.get("KEYCLOAK_SERVER_URL"), "KEYCLOAK_SERVER_URL");
 const keycloakConfigSSL = required(Deno.env.get("KEYCLOAK_CONFIG_SSL"), "KEYCLOAK_CONFIG_SSL") === "true" || false;
 
@@ -68,7 +68,7 @@ export const config = {
         
         appOrigin: required(Deno.env.get("KEYCLOAK_APP_ORIGIN"), "KEYCLOAK_APP_ORIGIN"),
         realm: required(Deno.env.get("KEYCLOAK_REALM"), "KEYCLOAK_REALM"),
-        issuerUrl: `${backendApiConfigSSL ? "https" : "http"}://` + keycloakSubdomain + '/.well-known/openid-configuration'
+        issuerUrl: `http://` + keycloakSubdomain + '/.well-known/openid-configuration'
     }
 };
 

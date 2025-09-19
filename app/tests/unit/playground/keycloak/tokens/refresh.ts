@@ -1,6 +1,6 @@
 import { config } from '@config/index.ts';
 // refresh_token.ts
-const url = `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/token`;
+const url = `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/token`;
 
 const params = new URLSearchParams();
 params.append("grant_type", "refresh_token");

@@ -9,7 +9,7 @@ import { config } from "@config/index.ts";
 async function validateAccessToken(accessToken: string): Promise<boolean> {
   try {
     const response = await fetch(
-      `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/userinfo`,
+      `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/userinfo`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -89,7 +89,7 @@ export async function businessAuth(
   if (isAccessTokenValid) {
     // Opcional: Obtener información del usuario si es necesario
     const userInfoResponse = await fetch(
-      `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/userinfo`,
+      `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/userinfo`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,

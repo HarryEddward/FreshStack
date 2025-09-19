@@ -16,7 +16,7 @@ export async function verifyJwt(token: string) {
   const payload = await verify(token, key);
 
   // Validar issuer
-  if (payload.iss !== `${config.keycloakEndpoint}/realms/CafeBuy`) {
+  if (payload.iss !== `${config.keycloakEndpoint}/realms/cafebuy-realm`) {
     throw new Error("Issuer no válido");
   }
 
@@ -30,7 +30,7 @@ export async function verifyJwt(token: string) {
 }
 
 async function getPublicKey(kid: string): Promise<CryptoKey | null> {
-  const res = await fetch(`${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/certs`);
+  const res = await fetch(`${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/certs`);
   const { keys } = await res.json();
 
   const jwk = keys.find((key: any) => key.kid === kid);
@@ -58,7 +58,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{ access_token:
   params.append("client_secret", config.client_secret);
   params.append("refresh_token", refreshToken);
 
-  const res = await fetch(`${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/token`, {
+  const res = await fetch(`${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/token`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

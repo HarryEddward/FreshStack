@@ -42,22 +42,19 @@ export default function useRPCAPI<T>(
       const timeoutMs = options?.timeout ?? 10000;
       const method = options?.method ?? 'POST';
       const zenstackQuery = options?.zenstackQuery ?? false;
-      
 
       let url = config.mainApiUrl + endpointUrl;
       let body: string | undefined;
 
       // Manejo de parámetros según el método HTTP
-      if (method === 'GET') {
-        // Para GET, convertir params a query string URLEncoded
+      if (method === 'GET' || (method === 'DELETE' && params?.where)) {
+        // Para GET y DELETE, enviar params como query string
         if (params) {
-          const queryString = encodeURIComponent(
-            JSON.stringify(params)
-          ).toString();
+          const queryString = encodeURIComponent(JSON.stringify(params)).toString();
           url += `?${zenstackQuery === true ? "q=" : ""}${queryString}`;
         }
       } else {
-        // Para POST, PUT, DELETE, etc., enviar params como JSON en el cuerpo
+        // Para POST, PUT, etc., enviar params como JSON en el cuerpo
         body = JSON.stringify(params ?? {});
       }
 
@@ -74,7 +71,7 @@ export default function useRPCAPI<T>(
         const headers: Record<string, string> = {
           ...options?.headers,
         };
-        if (method !== 'GET') {
+        if (method !== 'GET' && method !== 'DELETE') {
           headers['Content-Type'] = 'application/json';
         }
 
@@ -86,13 +83,28 @@ export default function useRPCAPI<T>(
           body,
         });
 
-        if (!res.ok) {
-          console.log(`[useRPCAPI] Request: ${res.status} - ${res.statusText}`);
-          throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        let json: any;
+        try {
+          json = await res.json();
+        } catch (e) {
+          json = null;
         }
 
-        const json = await res.json();
-        console.log(`[useRPCAPI] Request: ${JSON.stringify(json)}`);
+        if (!res.ok) {
+          const errorMsg = json?.message || res.statusText || 'Unknown error';
+          console.error(`[useRPCAPI] Error response from ${url}:`, {
+            status: res.status,
+            statusText: res.statusText,
+            body: json,
+          });
+
+          const err = new Error(`HTTP ${res.status} - ${errorMsg}`);
+          (err as any).status = res.status;
+          (err as any).body = json;
+          throw err;
+        }
+
+        console.log(`[useRPCAPI] Response from ${url}:`, json);
         state.value = { data: json as T, loading: false, error: null };
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
@@ -110,8 +122,6 @@ export default function useRPCAPI<T>(
     if (lastRequestParams.value !== undefined) {
       console.log(`[useRPCAPI] Revalidating: ${endpointUrl}`);
       makeRequest(lastRequestParams.value);
-    } else {
-      console.warn(`[useRPCAPI] No previous request to revalidate for: ${endpointUrl}`);
     }
   }, [makeRequest]);
 

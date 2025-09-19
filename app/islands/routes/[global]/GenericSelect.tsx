@@ -10,11 +10,12 @@ interface Option {
 
 interface GenericSelectProps {
   options: Option[];
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
   defaultValue?: string;
 }
+
 
 export default function Global_GenericSelect({
   options,
@@ -23,20 +24,14 @@ export default function Global_GenericSelect({
   className = "",
   defaultValue = "",
 }: GenericSelectProps) {
-  const [selected, setSelected] = useState(
-    options.find((o) => o.value === defaultValue) ?? null
-  );
   const [open, setOpen] = useState(false);
 
-  const handleSelect = (option: Option) => {
-    setSelected(option);
-    setOpen(false);
-    onChange(option.value);
-  };
+  const selected = options.find((o) => o.value === defaultValue) ?? null;
 
   return (
     <div className={clsx(className, `relative max-w-sm`)}>
       <button
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
         className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 text-left shadow-sm flex justify-between items-center hover:shadow-md transition"
       >
@@ -51,7 +46,10 @@ export default function Global_GenericSelect({
           {options.map((option) => (
             <li
               key={option.value}
-              onClick={() => handleSelect(option)}
+              onClick={() => {
+                onChange?.(option.value);
+                setOpen(false);
+              }}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-700"
             >
               {option.label}

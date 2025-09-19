@@ -64,8 +64,8 @@ export const oauth2ClientWeb = new KeycloakOAuth2Client({
     clientId: Deno.env.get("CLIENT_ID")!,
     clientSecret: Deno.env.get("CLIENT_SECRET")!,
     redirectUri: `${config.backendApiUrl}/api/v1/public/oauth/callback/web`,
-    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/auth`,
-    tokenUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/token`,
+    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/auth`,
+    tokenUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/token`,
     defaults: {
         scope: "openid profile email", // Alcances necesarios
     },
@@ -75,8 +75,8 @@ export const oauth2Client = new KeycloakOAuth2Client({
     clientId: Deno.env.get("CLIENT_ID")!,
     clientSecret: Deno.env.get("CLIENT_SECRET")!,
     redirectUri: `${config.backendApiUrl}/api/v1/public/oauth/callback/app`,
-    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/auth`,
-    tokenUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/token`,
+    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/auth`,
+    tokenUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/token`,
     defaults: {
         scope: "openid profile email", // Alcances necesarios
     },
@@ -87,8 +87,8 @@ export const oauth2ClientSumUp = new OAuth2Client({
     clientId: Deno.env.get("CLIENT_ID")!,
     clientSecret: Deno.env.get("CLIENT_SECRET")!,
     redirectUri: `${config.backendApiUrl}/api/v1/public/oauth/callback`,
-    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/auth`,
-    tokenUri: `${config.keycloakEndpoint}/realms/CafeBuy/protocol/openid-connect/token`,
+    authorizationEndpointUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/auth`,
+    tokenUri: `${config.keycloakEndpoint}/realms/cafebuy-realm/protocol/openid-connect/token`,
     defaults: {
         scope: "openid profile email", // Alcances necesarios
     },

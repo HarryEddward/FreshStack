@@ -42,11 +42,21 @@ enum TransactionStatus {
   PENDING
 }
 
+enum TypeBusinessOrderUbication {
+  PHONE
+  STATIC
+} 
+
 enum PaymentMethod {
   DEBIT_CARD
   CREDIT_CARD
   CASH
   OTHER
+}
+
+enum FileType {
+  WEBP
+  PDF
 }
 
 enum PriceAdjustmentType {
@@ -97,15 +107,42 @@ enum CESTTimeZone {
 }
 
 
+// Sistema de organización de almacén a través de FEFO (First Expires/First Out)
+enum BatchStatus {
+  AVAILABLE    // Disponible para uso
+  RESERVED     // Reservado para órdenes
+  EXPIRED      // Vencido
+  CONSUMED     // Totalmente consumido
+  DAMAGED      // Dañado
+}
+
+enum StockMovementType {
+  PURCHASE     // Compra/entrada
+  SALE         // Venta/salida
+  ADJUSTMENT   // Ajuste de inventario
+  EXPIRED      // Vencimiento
+  DAMAGED      // Daño
+  RESERVED     // Reserva
+  UNRESERVED   // Liberación de reserva
+  TRANSFER     // Transferencia entre productos
+}
+
+
+enum BusinessProductType {
+  INTERNAL
+  INDIRECT
+  DIRECT
+}
+
 model Business {
-  id                              String                                   @id() @default(cuid())
-  legalName                       String
-  taxId                           String                                   @unique()
-  phone                           String
-  email                           String                                   @unique()
-  registeredAddress               String
-  countryOfIncorporation          String
-  legalForm                       String
+  id                              String                                   @id() @default(cuid()) 
+  legalName                       String                                   @length(max: 450)
+  taxId                           String                                   @unique() @length(max: 450)
+  phone                           String                                   @unique() @length(max: 450) @regex("^[\\w-.]+@[\\w-]+\\.[a-z]{2,}$")
+  email                           String                                   @unique() @length(max: 450) @regex("^\\+?[0-9]{7,15}$")
+  registeredAddress               String                                   @length(max: 450)
+  countryOfIncorporation          String                                   @length(max: 450)
+  legalForm                       String                                   @length(max: 450)
   legalRepresentative             Json
   createdAt                       DateTime                                 @default(now())
   updatedAt                       DateTime                                 @updatedAt()
@@ -113,17 +150,20 @@ model Business {
   supportingDocumentsAttached     BusinessSupportingDocumentAttached[]
   commercialRelationship          BusinessCommercialRelationship?
   compliance                      BusinessCompliance?
-  configuration                   BusinessConfiguration?
+  configuration                     BusinessConfiguration?
   bankInformation                 BusinessBankInformation?
   paymentHistoryDetails           BusinessPaymentHistoryDetail[]
   paymentHistories                BusinessPaymentHistory[]
   licenses                        BusinessLicense[]
   payingCompany                   BusinessPayingCompany?
-  phones                          BusinessPhone[]
+  orderUbications                 BusinessOrderUbication[]
   clientOrders                    ClientOrder[]
-  suppliers                       BusinessSupplierInformation[]
+  suppliers                       BusinessSupplier[]
+  supplierInformation             BusinessSupplierInformation[]
   menus                           BusinessMenu[]
   products                        BusinessProduct[]
+  productStockBatches             BusinessProductStockBatch[]
+  productStockMovments            BusinessProductStockMovement[]
   generalSalesReportsAi           BusinessGeneralSalesReportAi[]
   generalWarehouseReportsAi       BusinessGeneralWarehouseReportAi[]
   warehouseReplenishmentReportsAi BusinessWarehouseReplenishmentReportAi[]
@@ -141,9 +181,10 @@ model Business {
   dailyCashBalances               BusinessDailyCashBalance[]
   users                           User[]                                   // Added relation to User
   clientTempOrders                ClientTempOrder[]                          // Added relation to ClientTempOrder
-  businessImages                  BusinessImage[]                          // Added relation to BusinessImage
-  callEmployeeQueue               ClientCallEmployeeQueue[]                // Added relation to ClientCallEmployeeQueue
-
+  files                            BusinessFile[]                          // Added relation to BusinessFile
+  paymentGateway                  BusinessPaymentGateway[]
+  productStockGroupMovement       BusinessProductStockGroupMovement[]
+  
   @@allow('all', auth().businessId == this.id)
   @@map("businesses")
 }
@@ -161,8 +202,8 @@ model User {
 
 model BusinessDailyCashBalance {
   id                  String           @id() @default(cuid())
-  businessId          String
-  employeeId          String
+  businessId          String          @length(max: 450)
+  employeeId          String          @length(max: 450)
   balanceDate         DateTime         @db.Date()
   expectedCashAmount  Float            @default(0)
   expectedCardAmount  Float            @default(0)
@@ -176,7 +217,7 @@ model BusinessDailyCashBalance {
   varianceCard        Float
   varianceOther       Float
   totalVariance       Float
-  notes               String?
+  notes               String?         @length(max: 450)
   isBalanced          Boolean          @default(false)
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt()
@@ -208,8 +249,8 @@ model BusinessSupportingDocuments {
 
 model BusinessSupportingDocumentAttached {
   id         String   @id() @default(cuid())
-  url        String
-  businessId String
+  url        String   @length(max: 450)
+  businessId String   @length(max: 450)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -221,7 +262,7 @@ model BusinessSupportingDocumentAttached {
 
 model BusinessCommercialRelationship {
   id                          String                                           @id()
-  type                        String
+  type                        String                                          @length(max: 450)
   signedContract              Boolean?
   thirdPartyPaymentPermission Boolean?
   createdAt                   DateTime                                         @default(now())
@@ -235,8 +276,8 @@ model BusinessCommercialRelationship {
 
 model BusinessCommercialRelationshipDocumentAttached {
   id                       String                         @id() @default(cuid())
-  url                      String
-  commercialRelationshipId String
+  url                      String                         @length(max: 450)
+  commercialRelationshipId String                         @length(max: 450)
   createdAt                DateTime                       @default(now())
   updatedAt                DateTime                       @updatedAt()
   commercialRelationship   BusinessCommercialRelationship @relation(fields: [commercialRelationshipId], references: [id], onDelete: Cascade)
@@ -263,12 +304,12 @@ model BusinessConfiguration {
   id                 String   @id()
   wifi                Json?
   schedule           Json?
-  timeZone           CESTTimeZone
+  timeZone           CESTTimeZone @default(EUROPE_MADRID)
   functionsActivated Json?
   apiKey             Json?
   affiliate           Boolean? @default(false)
   maxPhonesDevices   Int?     @default(30)
-  displayUsername    String?
+  displayUsername    String?  @length(max: 450)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt()
   business           Business @relation(fields: [id], references: [id], onDelete: Cascade)
@@ -279,12 +320,12 @@ model BusinessConfiguration {
 
 model BusinessBankInformation {
   id                  String   @id()
-  bankName            String
-  ibanOrAccountNumber String
-  swiftBic            String?
-  accountHolderName   String
-  bankAddress         String?
-  currency            String
+  bankName            String    @length(max: 450)  
+  ibanOrAccountNumber String    @length(max: 450)
+  swiftBic            String?   @length(max: 450)
+  accountHolderName   String    @length(max: 450)
+  bankAddress         String?   @length(max: 450)
+  currency            String    @length(max: 450)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt()
   business            Business @relation(fields: [id], references: [id], onDelete: Cascade)
@@ -295,13 +336,13 @@ model BusinessBankInformation {
 
 model BusinessPaymentHistoryDetail {
   id             String                   @id() @default(cuid())
-  description    String
+  description    String                   @length(max: 450)
   amount         Float
-  currency       String
+  currency       String                   @length(max: 450)
   taxesIncluded  Boolean?
   periodStart    DateTime?
   periodEnd      DateTime?
-  businessId     String
+  businessId     String                   @length(max: 450)
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt()
   business       Business                 @relation(fields: [businessId], references: [id])
@@ -314,13 +355,13 @@ model BusinessPaymentHistoryDetail {
 
 model BusinessPaymentHistory {
   id              String                       @id() @default(cuid())
-  businessId      String
-  paymentDetailId String
+  businessId      String                      @length(max: 450)
+  paymentDetailId String                      @length(max: 450)
   amount          Float
-  currency        String
-  type            String
-  status          String
-  stripeInvoiceId String?
+  currency        String                      @length(max: 450)
+  type            String                      @length(max: 450)
+  status          String                      @length(max: 450)
+  stripeInvoiceId String?                     @length(max: 450)
   createdAt       DateTime                     @default(now())
   updatedAt       DateTime                     @updatedAt()
   business        Business                     @relation(fields: [businessId], references: [id])
@@ -335,9 +376,9 @@ model BusinessPaymentHistory {
 
 model BusinessLicense {
   id                    String        @id() @default(cuid())
-  stripeCustomerId      String?
-  stripeSubscriptionId  String?       @unique()
-  stripePaymentIntentId String?       @unique()
+  stripeCustomerId      String?       @length(max: 450)      
+  stripeSubscriptionId  String?       @unique() @length(max: 450)
+  stripePaymentIntentId String?       @unique() @length(max: 450)
   licenseType           LicenseType
   plan                  LicensePlan
   status                LicenseStatus
@@ -345,7 +386,7 @@ model BusinessLicense {
   endDate               DateTime?
   isPaid                Boolean       @default(false)
   lockinMonths          Int?
-  businessId            String
+  businessId            String        @length(max: 450)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt()
   business              Business      @relation(fields: [businessId], references: [id])
@@ -359,10 +400,10 @@ model BusinessLicense {
 
 model BusinessPayingCompany {
   id        String   @id()
-  legalName String
-  taxId     String   @unique()
-  country   String
-  role      String
+  legalName String    @length(max: 450)
+  taxId     String    @unique() @length(max: 450)
+  country   String    @length(max: 450)
+  role      String    @length(max: 450)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
   business  Business @relation(fields: [id], references: [id], onDelete: Cascade)
@@ -375,11 +416,11 @@ model BusinessPayingCompany {
 model ClientOrder {
   id               String                     @id() @default(cuid())
   status           OrderStatus                @default(PENDING)
-  informationNotes String?
-  tableServed      String?
-  employeeServed   String?
+  informationNotes String?                    @length(max: 450)
+  tableServed      String?                    @length(max: 450)
+  employeeServed   String?                    @length(max: 450)
   refund           Boolean                    @default(false)
-  businessId       String
+  businessId       String                     @length(max: 450)
   createdAt        DateTime                   @default(now())
   updatedAt        DateTime                   @updatedAt()
   business         Business                   @relation(fields: [businessId], references: [id])
@@ -396,74 +437,71 @@ model ClientOrder {
 
 // Este modelo conecta el Pedido con los Productos.
 model ClientTempOrderLine {
-  id                  String  @id @default(cuid())
+  id                  String          @id() @default(cuid())
   quantity            Int
-  
-  // ✨ Buena práctica: Guardar el precio al momento de la creación
-  // para que no se vea afectado por cambios futuros en el catálogo.
-  priceAtTimeOfOrder  Float  
-
-  // Vínculo con el pedido al que pertenece
-  orderId             String
+  priceAtTimeOfOrder  Float           // Price snapshot at order time
+  orderId             String          @length(max: 450)
+  productId           String          @length(max: 450) // One product per line
   order               ClientTempOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             BusinessProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
 
-  // Vínculo con el producto del catálogo
-  productId           String
-  product             BusinessProduct @relation(fields: [productId], references: [id])
-  
   @@index([orderId])
   @@index([productId])
+  @@allow('all', auth().businessId == this.order.businessId)
+  @@map("client_temp_order_lines")
 }
+
 
 // Modelo ClientTempOrder ajustado
 model ClientTempOrder {
-  id         String                       @id() @default(cuid())
-  businessId String
-  phoneId    String                       @unique // Asegurar que solo un ClientTempOrder por phoneId
-
-  createdAt  DateTime                     @default(now())
-  business   Business                     @relation(fields: [businessId], references: [id])
-
-  lines     ClientTempOrderLine[]
-
-  // Relación inversa con BusinessPhone (este modelo no la controla).
-  businessPhone BusinessPhone?
-
+  id            String                       @id() @default(cuid())
+  businessId    String                        @length(max: 450)
+  phoneId       String                       @unique() @length(max: 450) // One temp order per phone
+  email         String?                      @length(max: 450) // Optional: Customer email for the order
+  createdAt     DateTime                     @default(now())
+  business      Business                     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lines         ClientTempOrderLine[]
+  
+  businessOrderUbicationId String?                     @unique() // Optional: Link to a BusinessPhone
+  businessOrderUbication BusinessOrderUbication?               @relation(fields: [businessOrderUbicationId], references: [id], onDelete: SetNull)
 
   @@index([businessId])
-  @@index([createdAt]) // Nuevo índice para consultas por fecha
+  @@index([createdAt])
   @@allow('all', auth().businessId == this.businessId)
   @@map("client_temp_orders")
 }
 
-model BusinessPhone {
-  id           String             @id() @default(cuid())
+model BusinessOrderUbication {
+  id                String                      @id() @default(cuid())
   
-  title        String
-  coordinate_x Decimal
-  coordinate_y Decimal
+  title             String                      @length(max: 450)
+  position_x        Decimal
+  position_y      Decimal
+  isCalling         Boolean                     @default(false)
+  type              TypeBusinessOrderUbication  @default(PHONE)
 
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt()
   
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt()
-  
-  businessId   String
-  business     Business           @relation(fields: [businessId], references: [id])
-  clientTempOrderId String?         @unique
-  clientTempOrder   ClientTempOrder? @relation(fields: [clientTempOrderId], references: [id], onDelete: SetNull)
+  businessId        String                      @length(max: 450)
+  business          Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  clientTempOrderId String?                     @unique() @length(max: 450)
+  clientTempOrder   ClientTempOrder?            @relation()
+
 
   @@index([businessId])
+  @@index([isCalling])
   @@allow('all', auth().businessId == this.businessId)
-  @@map("business_phone_ids")
+  @@map("business_order_ubications")
 }
 
 model ClientOrderProductLine {
   id              String      @id() @default(cuid())
-  orderId         String
+  orderId         String      @length(max: 450)
   productSnapshot Json
   quantity        Int
   subtotal        Float
-  businessId      String
+  businessId      String      @length(max: 450)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt()
   order           ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -478,7 +516,7 @@ model ClientOrderProductLine {
 model ClientOrderThermalPrinter {
   orderId    String      @id()
   printers   String[]
-  businessId String
+  businessId String       @length(max: 450)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt()
   order      ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -492,7 +530,7 @@ model ClientOrderThermalPrinter {
 model ClientOrderTicket {
   orderId    String      @id()
   tickets    Json
-  businessId String
+  businessId String     @length(max: 450)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt()
   order      ClientOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -505,13 +543,13 @@ model ClientOrderTicket {
 
 model ClientOrderTransaction {
   id                     String            @id() @default(cuid())
-  orderId                String
-  externalTransactionId  String            @unique()
+  orderId                String           @length(max: 450)
+  externalTransactionId  String            @unique() @length(max: 450)
   transactionAmount      Float
-  transactionCurrencyIso String
+  transactionCurrencyIso String             @length(max: 450)
   status                 TransactionStatus
   paymentMethod          PaymentMethod?
-  businessId             String
+  businessId             String             @length(max: 450)
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt()
   order                  ClientOrder       @relation(fields: [orderId], references: [id])
@@ -527,15 +565,15 @@ model ClientOrderTransaction {
 model BusinessSupplierInformation {
   id          String                    @id() @default(cuid())
   inUse       Boolean                   @default(true)
-  title       String
-  description String?
+  title       String                    @length(max: 450)
+  description String?                   @length(max: 450)
   schedule    Json?
-  businessId  String
+  businessId  String                    @length(max: 450)
   createdAt   DateTime                  @default(now())
   updatedAt   DateTime                  @updatedAt()
   business    Business                  @relation(fields: [businessId], references: [id])
-  imageId     String?                   @unique()
-  image       BusinessImage?            @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  imageId     String?                   @unique() @length(max: 450)
+  image       BusinessFile?             @relation(fields: [imageId], references: [id], onDelete: SetNull)
 
   @@index([businessId])
   @@index([imageId])
@@ -545,14 +583,14 @@ model BusinessSupplierInformation {
 
 model BusinessMenu {
   id                           String                        @id() @default(cuid())
-  title                        String
-  tags                         String?
-  nameLastModificationEmployee String?
+  title                        String                         @length(max: 450)
+  tags                         String?                        @length(max: 450)
+  nameLastModificationEmployee String?                         @length(max: 450)
   vip                          Boolean                       @default(false)
   haveSchedule                 Boolean                       @default(false)
   schedule                     Json?
-  businessId                   String
-  categoryId                   String?
+  businessId                   String                         @length(max: 450)
+  categoryId                   String?                        @length(max: 450)
   createdAt                    DateTime                      @default(now())
   updatedAt                    DateTime                      @updatedAt()
   business                     Business                      @relation(fields: [businessId], references: [id])
@@ -568,13 +606,13 @@ model BusinessMenu {
 
 model BusinessMenuPriceAdjustment {
   id                    String              @id() @default(cuid())
-  menuId                String
+  menuId                String              @length(max: 450)
   adjustmentType        PriceAdjustmentType
   percentageValue       Float
-  description           String?
+  description           String?             @length(max: 450)
   appliedAt             DateTime?
-  appliedByEmployeeName String?
-  businessId            String
+  appliedByEmployeeName String?             @length(max: 450)
+  businessId            String              @length(max: 450)
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt()
   menu                  BusinessMenu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
@@ -588,7 +626,7 @@ model BusinessMenuPriceAdjustment {
 
 model BusinessMenuCategory {
   id               String                                @id() @default(cuid())
-  businessId       String
+  businessId       String                               @length(max: 450)
   createdAt        DateTime                              @default(now())
   updatedAt        DateTime                              @updatedAt()
   menus            BusinessMenu[]
@@ -602,13 +640,13 @@ model BusinessMenuCategory {
 
 model BusinessMenuCategoryPriceAdjustment {
   id                    String               @id() @default(cuid())
-  menuCategoryId        String
+  menuCategoryId        String              @length(max: 450)
   adjustmentType        PriceAdjustmentType
-  percentageValue       Float
-  description           String?
-  appliedAt             DateTime?
-  appliedByEmployeeName String?
-  businessId            String
+  percentageValue       Float   
+  description           String?             @length(max: 450)
+  appliedAt             DateTime? 
+  appliedByEmployeeName String?             @length(max: 450)
+  businessId            String              @length(max: 450)
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt()
   menuCategory          BusinessMenuCategory @relation(fields: [menuCategoryId], references: [id], onDelete: Cascade)
@@ -622,9 +660,9 @@ model BusinessMenuCategoryPriceAdjustment {
 
 model BusinessProductGroup {
   id               String                                @id() @default(cuid())
-  name             String
-  description      String?
-  businessId       String
+  name             String                               @length(max: 450)
+  description      String?                              @length(max: 450)
+  businessId       String                               @length(max: 450)
   createdAt        DateTime                              @default(now())
   updatedAt        DateTime                              @updatedAt()
   business         Business                              @relation(fields: [businessId], references: [id])
@@ -638,13 +676,13 @@ model BusinessProductGroup {
 
 model BusinessProductGroupPriceAdjustment {
   id                    String               @id() @default(cuid())
-  productGroupId        String
+  productGroupId        String                @length(max: 450)
   adjustmentType        PriceAdjustmentType
   percentageValue       Float
-  description           String?
+  description           String?               @length(max: 450)
   appliedAt             DateTime?
-  appliedByEmployeeName String?
-  businessId            String
+  appliedByEmployeeName String?               @length(max: 450)
+  businessId            String                @length(max: 450)
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt()
   productGroup          BusinessProductGroup @relation(fields: [productGroupId], references: [id], onDelete: Cascade)
@@ -658,35 +696,51 @@ model BusinessProductGroupPriceAdjustment {
 
 model BusinessProduct {
   id                           String                @id() @default(cuid())
-  menuId                       String
-  name                         String
-  unityAmount                  Float
-  stockBatches                 Int[]
-  expirationDates              DateTime[]
-  unityConsumeStock            Int
-  unityConsumePrice            Decimal?              @db.Decimal(10, 2)
-  typeUnitConsumeMeasurement   String
-  tags                         String?
-  nameLastModificationEmployee String?
-  preparationDuration          Int?
-  urlImage                     String?               @unique()
-  imageId                      String?               @unique()
-  image                        BusinessImage?        @relation(fields: [imageId], references: [id], onDelete: SetNull)
-  businessId                   String
+  menuId                       String               @length(max: 450)
+  name                         String               @length(max: 450)
+
+  // Relación con batches de stock
+  // A la hora de buscar los lotes, se consultan en el lote especifico no dentro del mismo producto ya que almacena todos los lotes aplicados
+  stockBatches                 BusinessProductStockBatch[]
+
+  // Tipo de producto
+  /**
+  ** - Producto Interno:    Producto que no se expone al consumidor final, se usa para procesar productos que necesitan elaboración como los productos indirectos. (Ej.: Materias Primas: Harina)
+  ** - Producto Indirecto:  Producto que necesita de los productos internos para operar y realizar la consumición, si se expone al consumidor final. (Ej.: Platos especiales: Arros Brut, Helados caseros: Helado de avellana)
+  ** - Producto Directo:    Producto que opera directamente del stock independientemente aplicado directamente al consumidor final. (Ej.: Proveedores de bebidas de marcas especifcias: Acuarius)
+  */
+  type                          BusinessProductType // Se debe de especificarse formalmente: @default(INTERNAL)
+
+  // Información de consumo (no stock actual)
+  typeUnitConsumeMeasurement    String              @length(max: 450)
+  minimumStockAlert               Float             @gte(0)                  // Alerta de stock mínimo es obligatorio y puede ser de difernetes medidas
+  tags                          String?             @length(max: 450)
+  nameLastModificationEmployee   String?               @length(max: 450)
+  preparationDuration           Int                  // Se calcula en minutos
+
+  urlImage                     String?               @unique() @length(max: 450)
+  imageId                      String?               @unique() @length(max: 450)
+  image                        BusinessFile?         @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  
+  businessId                   String               @length(max: 450)
+  
   createdAt                    DateTime              @default(now())
   updatedAt                    DateTime              @updatedAt()
-  productGroupId               String?
+  
+  productGroupId               String?              @length(max: 450)
   productGroup                 BusinessProductGroup? @relation(fields: [productGroupId], references: [id], onDelete: SetNull)
+  
   menu                         BusinessMenu          @relation(fields: [menuId], references: [id], onDelete: Cascade)
   business                     Business              @relation(fields: [businessId], references: [id])
-  parentId                     String?
+  
+  parentId                     String?              @length(max: 450)
   parent                       BusinessProduct?      @relation("SubProducts", fields: [parentId], references: [id])
   children                     BusinessProduct[]     @relation("SubProducts")
   
-  // Este campo de relación INVERSA es solo para la API de Prisma.
-  // NO añade ninguna columna a la tabla "BusinessProduct" en tu base de datos.
-  // El modelo sigue estando limpio y desacoplado.
-  tempOrderLines ClientTempOrderLine[]
+  tempOrderLines               ClientTempOrderLine[]
+  
+  // Nuevas relaciones para trazabilidad
+  stockMovements               BusinessProductStockMovement[]
 
   @@index([menuId])
   @@index([businessId])
@@ -697,12 +751,160 @@ model BusinessProduct {
   @@map("business_products")
 }
 
+model BusinessProductStockBatch {
+  id                           String                @id() @default(cuid())
+
+  // Información del lote
+  batchName                  String?                 @length(max: 450)               // Número de lote opcional
+  
+  // count                        Decimal               @db.Decimal(10, 2) // El conteo de productos se aplica en una lógica separada del DB, contando con los movimientos del stock
+  originalCount                Decimal               @db.Decimal(10, 2) // Cantidad inicial
+  reservedCount                Decimal               @default(0) @db.Decimal(10, 2) // Cantidad reservada
+  
+  // Información financiera
+  costPerUnit                  Decimal?              @db.Decimal(10, 4)
+  // totalCost                    Decimal?              @db.Decimal(10, 2) // El coste total se calcula con el los productos de entrada incial con el coste por unidad
+  
+  // Fechas importantes
+  purchaseDate                 DateTime              @default(now())
+  expirationDate               DateTime?
+  
+  // Proveedor
+  // El proveedor es obligatorio para eivtar proveedores desconocidos, incluyend si el proveedor es directo al cliente se llama en el nombre del negocio a realizar el producto algo importante a mencionar. Por ejemplo en caso de hacer cosas caseras, se podria llamar: Local. Pero siempre un proveedor como interno o externo
+  supplierId                   String               @length(max: 450)
+  supplier                     BusinessSupplier     @relation(fields: [supplierId], references: [id])
+  
+  // Estado del batch
+  status                       BatchStatus           @default(AVAILABLE)
+  
+  // Relaciones
+  businessId                   String               @length(max: 450)
+  business                     Business              @relation(fields: [businessId], references: [id])
+
+  productId                    String               @length(max: 450)
+  product                      BusinessProduct       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Movimientos relacionados con este batch
+  stockMovements               BusinessProductStockMovement[]
+
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt()
+
+  @@index([businessId])
+  @@index([productId])
+  @@index([status])
+  @@index([expirationDate])
+  @@index([supplierId])
+  @@unique([productId, batchName]) // Evitar duplicados de lote por producto
+
+  @@allow('all', auth().businessId == this.businessId)
+  @@map("business_products_stock_batches")
+}
+
+// Tabla para rastrear todos los movimientos de stock
+model BusinessProductStockMovement {
+  id                           String                @id() @default(cuid())
+  
+  // Información del movimiento
+  type                         StockMovementType
+  quantity                     Decimal               @db.Decimal(10, 2)
+  reason                       String?                @length(max: 450)
+  
+  // Referencia al batch afectado
+  batchId                      String                @length(max: 450)
+  batch                        BusinessProductStockBatch @relation(fields: [batchId], references: [id])
+  
+  // Información del producto
+  productId                    String                 @length(max: 450)
+  product                      BusinessProduct       @relation(fields: [productId], references: [id])
+  
+  // Referencia a orden si aplica
+  orderId                      String?                @length(max: 450)
+  
+  // Se usa para poder ordenar los movimientos de forma unificada
+  groupStockMovmentId          String
+  groupStockMovment            BusinessProductStockGroupMovement @relation(fields: [groupStockMovmentId], references: [id], onDelete: Cascade)
+
+  businessId                   String                 @length(max: 450)
+  business                     Business              @relation(fields: [businessId], references: [id])
+  
+  createdAt                    DateTime              @default(now())
+
+  @@index([businessId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([type])
+  @@index([createdAt])
+
+  @@allow('all', auth().businessId == this.businessId)
+  @@map("business_products_stock_movements")
+}
+
+/*
+Tabla para rastrear todos los grupos de movimientos de stock
+tiene como proposito realizar undos de movimientos muchos mas limpios y faciles
+de aplicar.
+*/
+
+enum TypeBusinessProductStockGroupMovement {
+  CONSUMER
+  WAREHOUSE
+}
+
+model BusinessProductStockGroupMovement {
+  id                           String                @id() @default(cuid())
+
+  // Necesitamos saber el tipo de lugar del movimiento que se ejecuto, si es del almacén o del cliente final.
+  type                    TypeBusinessProductStockGroupMovement
+  
+  // Información sobre los movimientos hechos (incluyendo varios lotes que pueden ser difernetes)
+  batchesMovments         BusinessProductStockMovement[]
+
+  // Usuario que realizó el movimiento
+  userId                       String?                @length(max: 450)
+  employeeName                 String?                @length(max: 450)
+  
+  // Referencia a orden si aplica
+  orderId                      String?                @length(max: 450)
+  
+  businessId                   String                 @length(max: 450)
+  business                     Business              @relation(fields: [businessId], references: [id])
+  
+  createdAt                    DateTime              @default(now())
+
+  @@index([businessId])
+  @@index([createdAt])
+
+  @@allow('all', auth().businessId == this.businessId)
+  @@map("business_products_stock_group_movements")
+}
+
+// Modelo para proveedores
+model BusinessSupplier {
+  id                           String                @id() @default(cuid())
+  name                         String               @length(max: 450)
+  contactInfo                  String?              @length(max: 450)
+  
+  businessId                   String               @length(max: 450)
+  business                     Business              @relation(fields: [businessId], references: [id])
+  
+
+  stockBatches                 BusinessProductStockBatch[]
+  
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt()
+
+  @@index([businessId])
+  @@allow('all', auth().businessId == this.businessId)
+  @@map("business_suppliers")
+}
+
 model BusinessEmployee {
   id                String                        @id() @default(cuid()) // Sublicencia de la empresa
-  name              String
+  name              String                        @length(max: 450)
   job               EmployeeType
   activated         Boolean
-  businessId        String
+  businessId        String                        @length(max: 450)
   createdAt         DateTime                      @default(now())
   updatedAt         DateTime                      @updatedAt()
   business          Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -716,23 +918,15 @@ model BusinessEmployee {
 }
 
 
-// NOT FINISHED
-model ClientCallEmployeeQueue {
+
+model BusinessFile {
   id                String                        @id() @default(cuid())
-  businessId        String
-  business          Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@index([businessId])
-  @@allow('all', auth().businessId == this.businessId)
-  @@map("client_call_employee_queue")
-
-}
-
-
-model BusinessImage {
-  id                String                        @id() @default(cuid())
-  url               String?                       @unique()
-  businessId        String
+  name              String                        @unique() @length(max: 450)
+  path              String                        @unique() @length(max: 450)
+  mimeType          FileType
+  hash              String                        @unique() @length(max: 450)
+  sizeBytes         Int
+  businessId        String                        @length(max: 450)
   business          Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   products          BusinessProduct[]             @relation()
   suppliers         BusinessSupplierInformation[] @relation()
@@ -741,15 +935,15 @@ model BusinessImage {
 
   @@index([businessId])
   @@allow('all', auth().businessId == this.businessId)
-  @@map("business_image")
+  @@map("business_file")
 
 }
 
 model BusinessEmployeeClockRecord {
   id         String           @id() @default(cuid())
-  employeeId String
+  employeeId String           @length(max: 450)
   recordTime DateTime
-  businessId String
+  businessId String           @length(max: 450)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt()
   employee   BusinessEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
@@ -764,8 +958,8 @@ model BusinessEmployeeClockRecord {
 
 model BusinessGeneralSalesReportAi {
   id         String   @id() @default(cuid())
-  url        String   @unique()
-  businessId String
+  url        String   @unique() @length(max: 450)
+  businessId String   @length(max: 450)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   business   Business @relation(fields: [businessId], references: [id])
@@ -777,8 +971,8 @@ model BusinessGeneralSalesReportAi {
 
 model BusinessGeneralWarehouseReportAi {
   id         String   @id() @default(cuid())
-  url        String   @unique()
-  businessId String
+  url        String   @unique() @length(max: 450)
+  businessId String   @length(max: 450)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   business   Business @relation(fields: [businessId], references: [id])
@@ -789,14 +983,37 @@ model BusinessGeneralWarehouseReportAi {
 }
 
 model BusinessWarehouseReplenishmentReportAi {
-  id         String   @id() @default(cuid())
-  url        String   @unique()
-  businessId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt()
-  business   Business @relation(fields: [businessId], references: [id])
+  id          String   @id() @default(cuid())
+  url         String   @unique() @length(max: 450)
+  businessId  String    @length(max: 450)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  business    Business @relation(fields: [businessId], references: [id])
 
   @@index([businessId])
   @@allow('all', auth().businessId == this.businessId)
   @@map("business_warehouse_replenishment_reports_ai")
+}
+
+
+enum ProviderPaymentGateway {
+  STRIPE
+  SUMUP
+}
+
+
+model BusinessPaymentGateway {
+  id          String            @id() @default(cuid())
+
+  provider    ProviderPaymentGateway
+
+  public_key  String            @length(max: 450)
+  secret_key  String            @length(max: 450)
+
+  businessId  String
+  business    Business          @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@allow('all', auth().businessId == this.businessId)
+  @@map('business_client_payment')
 }

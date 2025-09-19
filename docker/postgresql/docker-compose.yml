@@ -1,32 +1,273 @@
-
-services:
-  server:
-    image: bitnami/postgresql:16  # Imagen oficial de Bitnami
-    deploy:  # Configuración específica para Swarm
-      mode: replicated
-      replicas: 1  # Número de instancias (puedes escalar a más)
-      placement:
-        constraints:
-          - node.role == manager  # Ejecutar solo en el nodo manager (opcional)
-      restart_policy:
-        condition: on-failure  # Reiniciar si falla
-    environment:  # Variables de entorno para configurar PostgreSQL
-      - POSTGRESQL_USERNAME=adrian  # Usuario personalizado
-      - POSTGRESQL_PASSWORD=adrian_dark_draw_everything  # Contraseña del usuario
-      - POSTGRESQL_DATABASE=freshstack  # Nombre de la base de datos
-      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything  # Contraseña del usuario 'postgres'
-      - POSTGRESQL_ENABLE_POSTGIS=true  # Ejemplo de extensión (opcional)
-    volumes:
-      - /bitnami/postgresql:/bitnami/postgresql  # Persistencia de datos
-      #- ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
-    ports:
-      - "5432:5432"  # Puerto expuesto (host:contenedor)
-    networks:
-      - fresh_framework_network  # Red personalizada
-
-volumes:
-  pg_data:  # Volumen para los datos persistentes
+version: '3.7'
 
 networks:
   fresh_framework_network:
     external: true
+
+volumes:
+  pg_primary_data:
+    driver: local
+  pg_replica_data:
+    driver: local
+  pg_primary_data_keycloak:
+    driver: local
+  pg_replica_data_keycloak:
+    driver: local
+  keycloak_data_node1:
+    driver: local
+  keycloak_data_node2:
+    driver: local
+
+services:
+  # PostgreSQL Primary para aplicación principal
+  postgres-primary:
+    image: bitnami/postgresql-repmgr:16
+    hostname: postgres-primary
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=super_secure_pass
+      - POSTGRESQL_USERNAME=adrian
+      - POSTGRESQL_PASSWORD=super_secure_pass
+      - POSTGRESQL_DATABASE=cafebuy-general-api-database
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgr_pass
+      - REPMGR_DATABASE=repmgr
+      - REPMGR_PRIMARY_HOST=postgres-primary
+      - REPMGR_PARTNER_NODES=postgres-primary,postgres-replica
+      - REPMGR_NODE_NAME=postgres-primary-1
+      - REPMGR_NODE_NETWORK_NAME=postgres-primary
+      - REPMGR_NODE_ID=1
+      - REPMGR_PRIMARY_ROLE=primary
+      - POSTGRESQL_SHARED_PRELOAD_LIBRARIES=repmgr
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repmgr
+      - POSTGRESQL_REPLICATION_PASSWORD=repmgr_pass
+    volumes:
+      - pg_primary_data:/bitnami/postgresql
+    networks:
+      - fresh_framework_network
+
+  # PostgreSQL Replica para aplicación principal
+  postgres-replica:
+    image: bitnami/postgresql-repmgr:16
+    hostname: postgres-replica
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=super_secure_pass
+      - POSTGRESQL_USERNAME=adrian
+      - POSTGRESQL_PASSWORD=super_secure_pass
+      - POSTGRESQL_DATABASE=cafebuy-general-api-database
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgr_pass
+      - REPMGR_DATABASE=repmgr
+      - REPMGR_PRIMARY_HOST=postgres-primary
+      - REPMGR_PARTNER_NODES=postgres-primary,postgres-replica
+      - REPMGR_NODE_NAME=postgres-replica-2
+      - REPMGR_NODE_NETWORK_NAME=postgres-replica
+      - REPMGR_NODE_ID=2
+      - POSTGRESQL_SHARED_PRELOAD_LIBRARIES=repmgr
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repmgr
+      - POSTGRESQL_REPLICATION_PASSWORD=repmgr_pass
+      - POSTGRESQL_MASTER_HOST=postgres-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+    volumes:
+      - pg_replica_data:/bitnami/postgresql
+    depends_on:
+      - postgres-primary
+    deploy:
+      replicas: 1
+    networks:
+      - fresh_framework_network
+
+  # PgBouncer para aplicación principal - configuración directa
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    environment:
+      # Configuración de la base de datos PostgreSQL backend
+      - POSTGRESQL_HOST=postgres-primary
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=adrian
+      - POSTGRESQL_PASSWORD=super_secure_pass
+      - POSTGRESQL_DATABASE=cafebuy-general-api-database
+      # Configuración de PgBouncer
+      - PGBOUNCER_DATABASE=cafebuy-general-api-database
+      - PGBOUNCER_LISTEN_ADDRESS=0.0.0.0
+      - PGBOUNCER_PORT=5432
+      - PGBOUNCER_AUTH_TYPE=md5
+      - PGBOUNCER_POOL_MODE=session
+      - PGBOUNCER_IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path
+      - PGBOUNCER_MAX_CLIENT_CONN=200
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+      - PGBOUNCER_MIN_POOL_SIZE=10
+      - PGBOUNCER_RESERVE_POOL_SIZE=10
+      - PGBOUNCER_SERVER_IDLE_TIMEOUT=600
+      - PGBOUNCER_LOG_CONNECTIONS=1
+      - PGBOUNCER_LOG_DISCONNECTIONS=1
+      - PGBOUNCER_LOG_POOLER_ERRORS=1
+      - PGBOUNCER_EXTRA_FLAGS=--verbose
+      # Usuarios admin
+      - PGBOUNCER_STATS_USERS=adrian
+    ports:
+      - "5432:5432"
+    depends_on:
+      - postgres-primary
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    networks:
+      - fresh_framework_network
+
+  # PostgreSQL Primary para Keycloak
+  postgresql-keycloak-primary:
+    image: bitnami/postgresql-repmgr:16
+    hostname: postgresql-keycloak-primary
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything
+      - POSTGRESQL_USERNAME=admin
+      - POSTGRESQL_PASSWORD=admin_secure_password
+      - POSTGRESQL_DATABASE=cafebuy-keycloak-database
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgr_pass_keycloak
+      - REPMGR_DATABASE=repmgr
+      - REPMGR_PRIMARY_HOST=postgresql-keycloak-primary
+      - REPMGR_PARTNER_NODES=postgresql-keycloak-primary,postgresql-keycloak-replica
+      - REPMGR_NODE_NAME=keycloak-primary-1
+      - REPMGR_NODE_NETWORK_NAME=postgresql-keycloak-primary
+      - REPMGR_NODE_ID=1
+      - REPMGR_PRIMARY_ROLE=primary
+      - POSTGRESQL_SHARED_PRELOAD_LIBRARIES=repmgr
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repmgr
+      - POSTGRESQL_REPLICATION_PASSWORD=repmgr_pass_keycloak
+    volumes:
+      - pg_primary_data_keycloak:/bitnami/postgresql
+    networks:
+      - fresh_framework_network
+
+  # PostgreSQL Replica para Keycloak
+  postgresql-keycloak-replica:
+    image: bitnami/postgresql-repmgr:16
+    hostname: postgresql-keycloak-replica
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything
+      - POSTGRESQL_USERNAME=admin
+      - POSTGRESQL_PASSWORD=admin_secure_password
+      - POSTGRESQL_DATABASE=cafebuy-keycloak-database
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgr_pass_keycloak
+      - REPMGR_DATABASE=repmgr
+      - REPMGR_PRIMARY_HOST=postgresql-keycloak-primary
+      - REPMGR_PARTNER_NODES=postgresql-keycloak-primary,postgresql-keycloak-replica
+      - REPMGR_NODE_NAME=keycloak-replica-2
+      - REPMGR_NODE_NETWORK_NAME=postgresql-keycloak-replica
+      - REPMGR_NODE_ID=2
+      - POSTGRESQL_SHARED_PRELOAD_LIBRARIES=repmgr
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repmgr
+      - POSTGRESQL_REPLICATION_PASSWORD=repmgr_pass_keycloak
+      - POSTGRESQL_MASTER_HOST=postgresql-keycloak-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+    volumes:
+      - pg_replica_data_keycloak:/bitnami/postgresql
+    depends_on:
+      - postgresql-keycloak-primary
+    deploy:
+      replicas: 1
+    networks:
+      - fresh_framework_network
+
+  # PgBouncer para Keycloak - configuración directa
+  pgbouncer-keycloak:
+    image: bitnami/pgbouncer:latest
+    environment:
+      # Configuración de la base de datos PostgreSQL backend
+      - POSTGRESQL_HOST=postgresql-keycloak-primary
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=admin
+      - POSTGRESQL_PASSWORD=admin_secure_password
+      - POSTGRESQL_DATABASE=cafebuy-keycloak-database
+      # Configuración de PgBouncer específica para Keycloak
+      - PGBOUNCER_DATABASE=cafebuy-keycloak-database
+      - PGBOUNCER_LISTEN_ADDRESS=0.0.0.0
+      - PGBOUNCER_PORT=5432
+      - PGBOUNCER_AUTH_TYPE=md5
+      - PGBOUNCER_POOL_MODE=session
+      - PGBOUNCER_IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path
+      - PGBOUNCER_MAX_CLIENT_CONN=200
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+      - PGBOUNCER_MIN_POOL_SIZE=10
+      - PGBOUNCER_RESERVE_POOL_SIZE=3
+      - PGBOUNCER_SERVER_IDLE_TIMEOUT=600
+      - PGBOUNCER_LOG_CONNECTIONS=1
+      - PGBOUNCER_LOG_DISCONNECTIONS=1
+      - PGBOUNCER_LOG_POOLER_ERRORS=1
+      - PGBOUNCER_EXTRA_FLAGS=--verbose
+      - PGBOUNCER_STATS_USERS=admin
+    ports:
+      - "5434:5432"
+    depends_on:
+      - postgresql-keycloak-primary
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    networks:
+      - fresh_framework_network
+
+  # Keycloak Node 1 - Updated for official image, production, and HA readiness
+  keycloak-node1:
+    image: quay.io/keycloak/keycloak:latest
+    hostname: keycloak-node1
+    command: start --verbose --import-realm
+    environment:
+      - KC_HTTP_ENABLED=true
+      - KC_HTTP_PORT=8080
+      - KC_CACHE=ispn  # Enables distributed Infinispan for HA
+      - KC_CACHE_STACK=jdbc-ping  # Uses Postgres for node discovery
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://pgbouncer-keycloak:5432/cafebuy-keycloak-database?connectTimeout=30000&socketTimeout=60000
+      - KC_DB_USERNAME=admin
+      - KC_DB_PASSWORD=admin_secure_password
+      - KC_DB_SCHEMA=public
+      - KC_PROXY=edge
+      - KC_TRANSACTION_XA_ENABLED=true
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin_secure_password
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME=localhost  # Change to your domain in production (e.g., keycloak.yourdomain.com)
+      - KC_HTTP_RELATIVE_PATH=/
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_PROXY_PROTOCOL_ENABLED=false
+    volumes:
+      - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
+      - ./keycloak/themes:/opt/keycloak/providers/
+      - keycloak_data_node1:/opt/keycloak/data  # Persist data imports/exports; optional for HA
+    ports:
+      - "8186:8080"  # HTTP access
+      - "9000:9000"  # Admin console
+      - "7800:7800"  # JGroups/Infinispan clustering (TCP)
+    depends_on:
+      - pgbouncer-keycloak
+    deploy:
+      replicas: 2  # Start with 1 for testing; scale to 2+ for HA after verifying startup
+      restart_policy:
+        condition: on-failure
+    networks:
+      - fresh_framework_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/auth-keycloak`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
+      - "traefik.http.routers.keycloak.middlewares=strip-keycloak,security-headers@docker"
+      - "traefik.http.middlewares.strip-keycloak.stripPrefix.prefixes=/auth-keycloak"

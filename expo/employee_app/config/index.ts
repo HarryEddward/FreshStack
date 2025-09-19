@@ -35,7 +35,7 @@ const config = {
     secret: process.env.JWT_SECRET || "",
   },
   keycloak: {
-    appOrigin: process.env.KEYCLOAK_APP_ORIGIN || 'https://10.241.157.225:8187',
+    appOrigin: process.env.KEYCLOAK_APP_ORIGIN || 'http://10.241.157.225:8186',
     keycloakSubdomain: process.env.KEYCLOAK_SERVER_URL || '',
     clientIdExpoApp: process.env.KEYCLOAK_CLIENT_ID_EXPO_APP || '',
     realm: process.env.KEYCLOAK_REALM || 'CafeBuy'

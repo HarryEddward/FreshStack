@@ -1,0 +1,1 @@
+En vez de usar call_waiter cambiarlo a waiter para luego hacer una llamada persoanlizada

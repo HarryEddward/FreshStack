@@ -3,7 +3,7 @@ import { join } from "$std/path/join.ts";
 import { config } from '@config/index.ts';
 
 export const KEYCLOAK_URL = config.keycloakEndpoint;
-export const KC_URL_REALME_CAFEBUY = `${KEYCLOAK_URL}/realms/CafeBuy`;
+export const KC_URL_REALME_CAFEBUY = `${KEYCLOAK_URL}/realms/cafebuy-realm`;
 export const KC_URL_OPENID = `${KC_URL_REALME_CAFEBUY}/protocol/openid-connect`;
 
 export function obtainFilePathJsonKeyCloak(): string {

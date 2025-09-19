@@ -44,11 +44,21 @@ enum TransactionStatus {
   PENDING
 }
 
+enum TypeBusinessOrderUbication {
+  PHONE
+  STATIC
+}
+
 enum PaymentMethod {
   DEBIT_CARD
   CREDIT_CARD
   CASH
   OTHER
+}
+
+enum FileType {
+  WEBP
+  PDF
 }
 
 enum PriceAdjustmentType {
@@ -98,11 +108,46 @@ enum CESTTimeZone {
   ARCTIC_LONGYEARBYEN
 }
 
+enum BatchStatus {
+  AVAILABLE
+  RESERVED
+  EXPIRED
+  CONSUMED
+  DAMAGED
+}
+
+enum StockMovementType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+  EXPIRED
+  DAMAGED
+  RESERVED
+  UNRESERVED
+  TRANSFER
+}
+
+enum BusinessProductType {
+  INTERNAL
+  INDIRECT
+  DIRECT
+}
+
+enum TypeBusinessProductStockGroupMovement {
+  CONSUMER
+  WAREHOUSE
+}
+
+enum ProviderPaymentGateway {
+  STRIPE
+  SUMUP
+}
+
 model Business {
   id                              String                                   @id() @default(cuid())
   legalName                       String
   taxId                           String                                   @unique()
-  phone                           String
+  phone                           String                                   @unique()
   email                           String                                   @unique()
   registeredAddress               String
   countryOfIncorporation          String
@@ -120,11 +165,14 @@ model Business {
   paymentHistories                BusinessPaymentHistory[]
   licenses                        BusinessLicense[]
   payingCompany                   BusinessPayingCompany?
-  phones                          BusinessPhone[]
+  orderUbications                 BusinessOrderUbication[]
   clientOrders                    ClientOrder[]
-  suppliers                       BusinessSupplierInformation[]
+  suppliers                       BusinessSupplier[]
+  supplierInformation             BusinessSupplierInformation[]
   menus                           BusinessMenu[]
   products                        BusinessProduct[]
+  productStockBatches             BusinessProductStockBatch[]
+  productStockMovments            BusinessProductStockMovement[]
   generalSalesReportsAi           BusinessGeneralSalesReportAi[]
   generalWarehouseReportsAi       BusinessGeneralWarehouseReportAi[]
   warehouseReplenishmentReportsAi BusinessWarehouseReplenishmentReportAi[]
@@ -142,8 +190,9 @@ model Business {
   dailyCashBalances               BusinessDailyCashBalance[]
   users                           User[]
   clientTempOrders                ClientTempOrder[]
-  businessImages                  BusinessImage[]
-  callEmployeeQueue               ClientCallEmployeeQueue[]
+  files                           BusinessFile[]
+  paymentGateway                  BusinessPaymentGateway[]
+  productStockGroupMovement       BusinessProductStockGroupMovement[]
 
   @@map("businesses")
 }
@@ -254,7 +303,7 @@ model BusinessConfiguration {
   id                 String       @id()
   wifi               Json?
   schedule           Json?
-  timeZone           CESTTimeZone
+  timeZone           CESTTimeZone @default(EUROPE_MADRID)
   functionsActivated Json?
   apiKey             Json?
   affiliate          Boolean?     @default(false)
@@ -382,42 +431,48 @@ model ClientTempOrderLine {
   quantity           Int
   priceAtTimeOfOrder Float
   orderId            String
-  order              ClientTempOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId          String
-  product            BusinessProduct @relation(fields: [productId], references: [id])
+  order              ClientTempOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product            BusinessProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@index([orderId])
   @@index([productId])
+  @@map("client_temp_order_lines")
 }
 
 model ClientTempOrder {
-  id            String                @id() @default(cuid())
-  businessId    String
-  phoneId       String                @unique()
-  createdAt     DateTime              @default(now())
-  business      Business              @relation(fields: [businessId], references: [id])
-  lines         ClientTempOrderLine[]
-  businessPhone BusinessPhone?
+  id                       String                  @id() @default(cuid())
+  businessId               String
+  phoneId                  String                  @unique()
+  email                    String?
+  createdAt                DateTime                @default(now())
+  business                 Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lines                    ClientTempOrderLine[]
+  businessOrderUbicationId String?                 @unique()
+  businessOrderUbication   BusinessOrderUbication? @relation(fields: [businessOrderUbicationId], references: [id], onDelete: SetNull)
 
   @@index([businessId])
   @@index([createdAt])
   @@map("client_temp_orders")
 }
 
-model BusinessPhone {
-  id                String           @id() @default(cuid())
+model BusinessOrderUbication {
+  id                String                     @id() @default(cuid())
   title             String
-  coordinate_x      Decimal
-  coordinate_y      Decimal
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt()
+  position_x        Decimal
+  position_y        Decimal
+  isCalling         Boolean                    @default(false)
+  type              TypeBusinessOrderUbication @default(PHONE)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt()
   businessId        String
-  business          Business         @relation(fields: [businessId], references: [id])
-  clientTempOrderId String?          @unique()
-  clientTempOrder   ClientTempOrder? @relation(fields: [clientTempOrderId], references: [id], onDelete: SetNull)
+  business          Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  clientTempOrderId String?                    @unique()
+  clientTempOrder   ClientTempOrder?           @relation()
 
   @@index([businessId])
-  @@map("business_phone_ids")
+  @@index([isCalling])
+  @@map("business_order_ubications")
 }
 
 model ClientOrderProductLine {
@@ -484,17 +539,17 @@ model ClientOrderTransaction {
 }
 
 model BusinessSupplierInformation {
-  id          String         @id() @default(cuid())
-  inUse       Boolean        @default(true)
+  id          String        @id() @default(cuid())
+  inUse       Boolean       @default(true)
   title       String
   description String?
   schedule    Json?
   businessId  String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt()
-  business    Business       @relation(fields: [businessId], references: [id])
-  imageId     String?        @unique()
-  image       BusinessImage? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt()
+  business    Business      @relation(fields: [businessId], references: [id])
+  imageId     String?       @unique()
+  image       BusinessFile? @relation(fields: [imageId], references: [id], onDelete: SetNull)
 
   @@index([businessId])
   @@index([imageId])
@@ -609,32 +664,31 @@ model BusinessProductGroupPriceAdjustment {
 }
 
 model BusinessProduct {
-  id                           String                @id() @default(cuid())
+  id                           String                         @id() @default(cuid())
   menuId                       String
   name                         String
-  unityAmount                  Float
-  stockBatches                 Int[]
-  expirationDates              DateTime[]
-  unityConsumeStock            Int
-  unityConsumePrice            Decimal?              @db.Decimal(10, 2)
+  stockBatches                 BusinessProductStockBatch[]
+  type                         BusinessProductType
   typeUnitConsumeMeasurement   String
+  minimumStockAlert            Float
   tags                         String?
   nameLastModificationEmployee String?
-  preparationDuration          Int?
-  urlImage                     String?               @unique()
-  imageId                      String?               @unique()
-  image                        BusinessImage?        @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  preparationDuration          Int
+  urlImage                     String?                        @unique()
+  imageId                      String?                        @unique()
+  image                        BusinessFile?                  @relation(fields: [imageId], references: [id], onDelete: SetNull)
   businessId                   String
-  createdAt                    DateTime              @default(now())
-  updatedAt                    DateTime              @updatedAt()
+  createdAt                    DateTime                       @default(now())
+  updatedAt                    DateTime                       @updatedAt()
   productGroupId               String?
-  productGroup                 BusinessProductGroup? @relation(fields: [productGroupId], references: [id], onDelete: SetNull)
-  menu                         BusinessMenu          @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  business                     Business              @relation(fields: [businessId], references: [id])
+  productGroup                 BusinessProductGroup?          @relation(fields: [productGroupId], references: [id], onDelete: SetNull)
+  menu                         BusinessMenu                   @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  business                     Business                       @relation(fields: [businessId], references: [id])
   parentId                     String?
-  parent                       BusinessProduct?      @relation("SubProducts", fields: [parentId], references: [id])
-  children                     BusinessProduct[]     @relation("SubProducts")
+  parent                       BusinessProduct?               @relation("SubProducts", fields: [parentId], references: [id])
+  children                     BusinessProduct[]              @relation("SubProducts")
   tempOrderLines               ClientTempOrderLine[]
+  stockMovements               BusinessProductStockMovement[]
 
   @@index([menuId])
   @@index([businessId])
@@ -642,6 +696,88 @@ model BusinessProduct {
   @@index([productGroupId])
   @@index([imageId])
   @@map("business_products")
+}
+
+model BusinessProductStockBatch {
+  id             String                         @id() @default(cuid())
+  batchName      String?
+  originalCount  Decimal                        @db.Decimal(10, 2)
+  reservedCount  Decimal                        @default(0) @db.Decimal(10, 2)
+  costPerUnit    Decimal?                       @db.Decimal(10, 4)
+  purchaseDate   DateTime                       @default(now())
+  expirationDate DateTime?
+  supplierId     String
+  supplier       BusinessSupplier               @relation(fields: [supplierId], references: [id])
+  status         BatchStatus                    @default(AVAILABLE)
+  businessId     String
+  business       Business                       @relation(fields: [businessId], references: [id])
+  productId      String
+  product        BusinessProduct                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockMovements BusinessProductStockMovement[]
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt()
+
+  @@unique([productId, batchName])
+  @@index([businessId])
+  @@index([productId])
+  @@index([status])
+  @@index([expirationDate])
+  @@index([supplierId])
+  @@map("business_products_stock_batches")
+}
+
+model BusinessProductStockMovement {
+  id                  String                            @id() @default(cuid())
+  type                StockMovementType
+  quantity            Decimal                           @db.Decimal(10, 2)
+  reason              String?
+  batchId             String
+  batch               BusinessProductStockBatch         @relation(fields: [batchId], references: [id])
+  productId           String
+  product             BusinessProduct                   @relation(fields: [productId], references: [id])
+  orderId             String?
+  groupStockMovmentId String
+  groupStockMovment   BusinessProductStockGroupMovement @relation(fields: [groupStockMovmentId], references: [id], onDelete: Cascade)
+  businessId          String
+  business            Business                          @relation(fields: [businessId], references: [id])
+  createdAt           DateTime                          @default(now())
+
+  @@index([businessId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("business_products_stock_movements")
+}
+
+model BusinessProductStockGroupMovement {
+  id              String                                @id() @default(cuid())
+  type            TypeBusinessProductStockGroupMovement
+  batchesMovments BusinessProductStockMovement[]
+  userId          String?
+  employeeName    String?
+  orderId         String?
+  businessId      String
+  business        Business                              @relation(fields: [businessId], references: [id])
+  createdAt       DateTime                              @default(now())
+
+  @@index([businessId])
+  @@index([createdAt])
+  @@map("business_products_stock_group_movements")
+}
+
+model BusinessSupplier {
+  id           String                      @id() @default(cuid())
+  name         String
+  contactInfo  String?
+  businessId   String
+  business     Business                    @relation(fields: [businessId], references: [id])
+  stockBatches BusinessProductStockBatch[]
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt()
+
+  @@index([businessId])
+  @@map("business_suppliers")
 }
 
 model BusinessEmployee {
@@ -661,18 +797,13 @@ model BusinessEmployee {
   @@map("business_employees")
 }
 
-model ClientCallEmployeeQueue {
-  id         String   @id() @default(cuid())
-  businessId String
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@index([businessId])
-  @@map("client_call_employee_queue")
-}
-
-model BusinessImage {
+model BusinessFile {
   id         String                        @id() @default(cuid())
-  url        String?                       @unique()
+  name       String                        @unique()
+  path       String                        @unique()
+  mimeType   FileType
+  hash       String                        @unique()
+  sizeBytes  Int
   businessId String
   business   Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   products   BusinessProduct[]             @relation()
@@ -681,7 +812,7 @@ model BusinessImage {
   updatedAt  DateTime                      @updatedAt()
 
   @@index([businessId])
-  @@map("business_image")
+  @@map("business_file")
 }
 
 model BusinessEmployeeClockRecord {
@@ -734,4 +865,16 @@ model BusinessWarehouseReplenishmentReportAi {
 
   @@index([businessId])
   @@map("business_warehouse_replenishment_reports_ai")
+}
+
+model BusinessPaymentGateway {
+  id         String                 @id() @default(cuid())
+  provider   ProviderPaymentGateway
+  public_key String
+  secret_key String
+  businessId String
+  business   Business               @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("business_client_payment")
 }

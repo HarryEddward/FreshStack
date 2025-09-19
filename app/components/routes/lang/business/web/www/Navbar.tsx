@@ -8,6 +8,8 @@ import {
   CookieIcon,
   FileTextIcon,
   HelpCircleIcon,
+  CogIcon,
+  LogOutIcon,
 } from 'npm:lucide-preact@^0.485.0';
 import { Tooltip } from "@islands/routes/[lang]/business/web/www/Tooltip.tsx";
 
@@ -27,66 +29,75 @@ export default function LangBusinessWebWWWComponentNavbar({ authenticated=false 
       </a>
 
       {/* Center Navigation */}
+      
       <div className="flex gap-x-12 items-center">
         {/* About Dropdown */}
-        <DropdownMenu label="About" href="/es/business/web/www/about">
-          <DropdownItem
-            href="/es/business/web/www/team"
-            icon={<UsersIcon className="text-blue-600" />}
-            title="Team"
-            description="Conoce a nuestro equipo de expertos."
-          />
-          <DropdownItem
-            href="/es/business/web/www/history"
-            icon={<HistoryIcon className="text-yellow-500" />}
-            title="History"
-            description="Nuestra evolución y hitos clave."
-          />
-          <DropdownItem
-            href="/es/business/web/www/careers"
-            icon={<BriefcaseIcon className="text-green-600" />}
-            title="Careers"
-            description="Únete a nuestro equipo global."
-          />
-        </DropdownMenu>
 
-        {/* Partners Dropdown */}
-        <DropdownMenu label="Partners" href="/es/business/web/www/partners">
-          <DropdownItem
-            href="/es/business/web/www/partners/local"
-            icon={<BriefcaseIcon className="text-indigo-600" />}
-            title="Local Partners"
-            description="Colaboradores en tu región."
-          />
-          <DropdownItem
-            href="/es/business/web/www/partners/global"
-            icon={<GlobeIcon className="text-purple-600" />}
-            title="Global Partners"
-            description="Nuestra red internacional."
-          />
-        </DropdownMenu>
+        {
+          !authenticated && (
+            <>
+              <DropdownMenu label="About" href="/es/business/web/www/about">
+                <DropdownItem
+                  href="/es/business/web/www/team"
+                  icon={<UsersIcon className="text-blue-600" />}
+                  title="Team"
+                  description="Conoce a nuestro equipo de expertos."
+                />
+                <DropdownItem
+                  href="/es/business/web/www/history"
+                  icon={<HistoryIcon className="text-yellow-500" />}
+                  title="History"
+                  description="Nuestra evolución y hitos clave."
+                />
+                <DropdownItem
+                  href="/es/business/web/www/careers"
+                  icon={<BriefcaseIcon className="text-green-600" />}
+                  title="Careers"
+                  description="Únete a nuestro equipo global."
+                />
+              </DropdownMenu>
 
-        {/* Legal Dropdown */}
-        <DropdownMenu label="Legal" href="/es/business/web/www/legal">
-          <DropdownItem
-            href="/es/business/web/www/privacy"
-            icon={<ShieldIcon className="text-gray-800" />}
-            title="Privacy"
-            description="Tu privacidad es nuestra prioridad."
-          />
-          <DropdownItem
-            href="/es/business/web/www/cookies"
-            icon={<CookieIcon className="text-orange-500" />}
-            title="Cookies"
-            description="Uso de cookies y opciones."
-          />
-          <DropdownItem
-            href="/es/business/web/www/terms"
-            icon={<FileTextIcon className="text-blue-500" />}
-            title="Terms"
-            description="Condiciones legales de uso."
-          />
-        </DropdownMenu>
+              {/* Partners Dropdown */}
+              <DropdownMenu label="Partners" href="/es/business/web/www/partners">
+                <DropdownItem
+                  href="/es/business/web/www/partners/local"
+                  icon={<BriefcaseIcon className="text-indigo-600" />}
+                  title="Local Partners"
+                  description="Colaboradores en tu región."
+                />
+                <DropdownItem
+                  href="/es/business/web/www/partners/global"
+                  icon={<GlobeIcon className="text-purple-600" />}
+                  title="Global Partners"
+                  description="Nuestra red internacional."
+                />
+              </DropdownMenu>
+
+              {/* Legal Dropdown */}
+              <DropdownMenu label="Legal" href="/es/business/web/www/legal">
+                <DropdownItem
+                  href="/es/business/web/www/privacy"
+                  icon={<ShieldIcon className="text-gray-800" />}
+                  title="Privacy"
+                  description="Tu privacidad es nuestra prioridad."
+                />
+                <DropdownItem
+                  href="/es/business/web/www/cookies"
+                  icon={<CookieIcon className="text-orange-500" />}
+                  title="Cookies"
+                  description="Uso de cookies y opciones."
+                />
+                <DropdownItem
+                  href="/es/business/web/www/terms"
+                  icon={<FileTextIcon className="text-blue-500" />}
+                  title="Terms"
+                  description="Condiciones legales de uso."
+                />
+              </DropdownMenu>
+            </>
+          )
+        }
+        
 
         {/* Pricing Link */}
         {
@@ -110,6 +121,26 @@ export default function LangBusinessWebWWWComponentNavbar({ authenticated=false 
           <HelpCircleIcon className="w-4 h-4" />
           FAQ
         </a>
+
+        {
+          authenticated && (
+            <>
+              <a
+                href="/es/business/web/app/configurations"
+                className="inline-flex items-center gap-1 text-gray-700 hover:text-black font-medium"
+              >
+                <CogIcon size={25} />
+              </a>
+              <a
+                href="/es/business/web/app/logout"
+                className="inline-flex items-center gap-1 text-gray-700 hover:text-black font-medium"
+              >
+                <LogOutIcon size={25} />
+              </a>
+            </>
+          )
+        }
+        
       </div>
 
       {/* Right - Auth Links */}

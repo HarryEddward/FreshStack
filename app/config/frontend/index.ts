@@ -1,11 +1,10 @@
 
 const baseUrlHttp = "https://10.241.157.225";
 const baseUrlWs = "wss://10.241.157.225";
-const keycloakEndpoint = `${baseUrlHttp}:8187`;
+const keycloakEndpoint = `${baseUrlHttp}:8186`;
 const backendEndpoint = `${baseUrlHttp}:8000`;
 const backendEndpointWs = `${baseUrlWs}:8000`;
-
-
+const bucketS3Endpoint = "http://10.241.157.225:8888/buckets/freshstack";
 const businessTeams = [
     {
         "name": "sales",
