@@ -16,7 +16,7 @@ services:
       - "--providers.swarm.exposedbydefault=false"
 
       # Specify the default network for Traefik to connect to services
-      - "--providers.swarm.network=traefik_traefik_proxy"
+      - "--providers.swarm.network=traefik-public"
       - "--providers.file.directory=/etc/traefik/dynamic"  # Cargar configuración dinámica
       - "--providers.file.watch=true"  # Monitorear cambios
       - "--entrypoints.web.address=:80"
