@@ -7,31 +7,31 @@ services:
       # Logging
       - "--log.level=INFO"
       - "--accesslog=true"
-      
+
       # API and Dashboard
       - "--api.dashboard=true"
       - "--api.insecure=false"
-      
+
       # Docker Swarm Provider
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.watch=true"
       - "--providers.swarm.exposedbydefault=false"
       - "--providers.swarm.network=traefik-public"
-      
+
       # File Provider for dynamic configuration
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
-      
+
       # Entrypoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
-      
-      # Global redirect to HTTPS
+
+      # Enable TLS on secure entrypoint
       - "--entrypoints.websecure.http.tls=true"
-      
+
     ports:
       - target: 80
         published: 80
@@ -41,39 +41,42 @@ services:
         published: 443
         protocol: tcp
         mode: ingress
-        
+
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "traefik-config:/etc/traefik/dynamic:ro"
-      
+
     secrets:
       - source: ssl_cert
         target: /etc/traefik/certs/cafebuy.crt
       - source: ssl_key
         target: /etc/traefik/certs/cafebuy.key
-        
+
+    configs:
+      - source: tls_conf
+        target: /etc/traefik/dynamic/tls.yaml
+
     networks:
       - traefik-public
-      
+
     deploy:
       placement:
         constraints:
           - node.role == manager
       labels:
-        # Disable auto-discovery to avoid port errors
+        # Desactivar auto-discovery en Traefik para evitar conflictos
         - "traefik.enable=false"
-        
+
         # Dashboard routing
         - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        
-        # Optional: Basic Auth for dashboard (uncomment if needed)
+
+        # (Opcional) Basic Auth para dashboard
         # - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
         # - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$2y$$05$$ejemploHashedPassword"
 
-  # Servicio de ejemplo whoami
+  # Servicio de prueba
   whoami:
     image: traefik/whoami
     deploy:
@@ -84,15 +87,6 @@ services:
         - "traefik.http.routers.whoami.entrypoints=websecure"
         - "traefik.http.routers.whoami.tls=true"
         - "traefik.http.services.whoami.loadbalancer.server.port=80"
-        
-        # Optional: Redirect www to non-www or vice versa
-        # - "traefik.http.routers.whoami-redirect.rule=Host(`cafebuy.es`)"
-        # - "traefik.http.routers.whoami-redirect.entrypoints=websecure"
-        # - "traefik.http.routers.whoami-redirect.middlewares=redirect-to-www"
-        # - "traefik.http.middlewares.redirect-to-www.redirectregex.regex=^https://cafebuy.es/(.*)"
-        # - "traefik.http.middlewares.redirect-to-www.redirectregex.replacement=https://www.cafebuy.es/$${1}"
-        # - "traefik.http.middlewares.redirect-to-www.redirectregex.permanent=true"
-        
     networks:
       - traefik-public
 
@@ -100,11 +94,16 @@ networks:
   traefik-public:
     external: true
 
-volumes:
-  traefik-config:
-
 secrets:
   ssl_cert:
     external: true
   ssl_key:
     external: true
+
+configs:
+  tls_conf:
+    content: |
+      tls:
+        certificates:
+          - certFile: /etc/traefik/certs/cafebuy.crt
+            keyFile: /etc/traefik/certs/cafebuy.key
