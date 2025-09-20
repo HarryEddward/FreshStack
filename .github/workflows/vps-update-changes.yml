@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Permite ejecutar manualmente
 
 env:
-  PROJECT_PATH: /home/ubuntu/cafebuy  # Cambia esta ruta por la de tu proyecto
+  PROJECT_PATH: /home/ubuntu/FreshStack
   REPO_URL: https://github.com/${{ github.repository }}.git
 
 jobs:
@@ -24,6 +24,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          envs: PROJECT_PATH,REPO_URL
           script: |
             set -e  # Salir si hay algún error
             
