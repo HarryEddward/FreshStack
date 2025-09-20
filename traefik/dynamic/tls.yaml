@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cafebuy.crt
+      keyFile: /etc/traefik/certs/cafebuy.key
