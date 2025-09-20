@@ -19,8 +19,7 @@ jobs:
           script: |
             set -e
 
-            # Lista de networks a crear
-            NETWORKS=("traefik-public" "fresh-backend" "fastify-api")
+            NETWORKS=("traefik-public")
 
             for NETWORK_NAME in "${NETWORKS[@]}"; do
               if sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
@@ -30,10 +29,10 @@ jobs:
                 sudo docker network create \
                   --driver=overlay \
                   --attachable \
-                  --external=false \
                   --opt encrypted \
                   "$NETWORK_NAME"
                 echo "Network '$NETWORK_NAME' creada correctamente."
               fi
             done
+
             echo "✅ Todas las networks fueron creadas o ya existían."
