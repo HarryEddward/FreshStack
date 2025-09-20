@@ -49,7 +49,8 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 - API: **Fastify + Zenstack (Fastify Generator API CRUD + RBAC Auth Adapter for Prisma)**
 - Infrastructure Multimedia Storage: **SeaweedFS (Instancia S3)**
 - Persistant Database (HA): **PostgreSQL / repmgr / pgbouncer**
-- CI/CD: **Jenkins**
+- CI/CD Gestión Nodos Escalvos Docker Swarm: **Jenkins**
+- CI/CD Gestión Nodos Maestros de Docker Swarm como en Producción como en Testeo para Producción: **Github Actions**
 - Server: **Fresh (Deno) (Frontend & Backend)**
 - ORM: **Prisma**
 - Testing: **Deno**

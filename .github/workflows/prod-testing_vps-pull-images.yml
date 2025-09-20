@@ -1,0 +1,38 @@
+name: Pull All Docker Images to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull Docker Images on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "🔹 Actualizando lista de imágenes Docker"
+
+            # Forzar login si usas un registry privado (opcional)
+            # docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+
+            # Lista de imágenes a actualizar
+            IMAGES=(
+              "traefik:v3.1"
+              "traefik/whoami:latest"
+            )
+
+            for IMAGE in "${IMAGES[@]}"; do
+              echo "⬇️  Pulling $IMAGE..."
+              sudo docker pull "$IMAGE"
+            done
+
+            echo "✅ Todas las imágenes Docker fueron actualizadas correctamente"
