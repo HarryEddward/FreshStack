@@ -48,6 +48,8 @@ sidebar_position: 1
 - ✅ Compra  de un servidor VPS (proveedor: OVHCloud) (2025/9/18)
 - ✅ Inicialización del setup en servidor VPS contratado (2025/9/18)
 - ✅ CI/CD por Gihtub Workflow para automatizar por el VPS cambios del proyecto del repositorio de Github para hacer pruebas de produccion real (2025/9/20)
+- ✅ Automatización de aplicación de secretos SSL por github secrets a tarves de Github Actions por yml workflow, para uatomatizar desde el VPS del nodo maestro los secretos sin Jenkins (2025/9/20)
+- ✅ Concatenar el .cert_bundler y .cert para producción el SSL (2025/9/20)
 - 🏗️ Aplicar variables sobre certificados CA SSL directamente como secretos en docker swarm
 - 🏗️ Cambiar de configuración de host en el archivo de autoamtización de Realms en Keycloak referenciado directamente en el dominio público
 - 🏗️ Crear entorno de pruebas directamente a producción sobre el VPS
