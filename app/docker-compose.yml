@@ -2,97 +2,15 @@ networks:
   fresh_framework_network:
     external: true
 
-volumes:
-  pg_data:
-  pg_data_keycloak:
-
 services:
-  #server:
-  #  image: fresh_framework_deno_server
-  #  deploy:  # Configuración específica para Swarm
-  #    mode: replicated
-  #    replicas: 2  # Número de instancias (puedes escalar a más)
-  #    restart_policy:
-  #      condition: on-failure  # Reiniciar si falla
-  #  ports:
-  #    - "8000:8000"  # Puerto expuesto (host:contenedor)
-  #  networks:
-  #    - fresh_framework_network  # Red personalizada
-  postgresql:
-    image: bitnami/postgresql:16 # Imagen oficial de Bitnami
-    deploy: # Configuración específica para Swarm
+  server:
+    image: fresh_framework_deno_server
+    deploy:  # Configuración específica para Swarm
       mode: replicated
-      replicas: 1 # Número de instancias (puedes escalar a más)
-      placement:
-        constraints:
-          - node.role == manager  # Ejecutar solo en el nodo manager (opcional)
+      replicas: 2  # Número de instancias (puedes escalar a más)
       restart_policy:
         condition: on-failure  # Reiniciar si falla
-    environment: # Variables de entorno para configurar PostgreSQL
-      - POSTGRESQL_USERNAME=adrian # Usuario personalizado
-      - POSTGRESQL_PASSWORD=adrian_dark_draw_everything # Contraseña del usuario
-      - POSTGRESQL_DATABASE=cafepay # Nombre de la base de datos
-      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything # Contraseña del usuario 'postgres'
-      - POSTGRESQL_ENABLE_POSTGIS=true # Ejemplo de extensión (opcional)
-    volumes:
-      - /bitnami/postgresql:/bitnami/postgresql # Persistencia de datos
-    #- ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
     ports:
-      - "5432:5432" # Puerto expuesto (host:contenedor)
+      - "8000:8000"  # Puerto expuesto (host:contenedor)
     networks:
-      - fresh_framework_network # Red personalizada
-    
-
-  postgresql_keycloak:
-    image: bitnami/postgresql:16 # Imagen oficial de Bitnami
-    deploy: # Configuración específica para Swarm
-      mode: replicated
-      replicas: 1 # Número de instancias (puedes escalar a más)
-      restart_policy:
-        condition: on-failure # Reiniciar si falla
-    environment: # Variables de entorno para configurar PostgreSQL
-      - POSTGRESQL_USERNAME=adrian # Usuario personalizado
-      - POSTGRESQL_PASSWORD=adrian_dark_draw_everything # Contraseña del usuario
-      - POSTGRESQL_DATABASE=keycloak_database # Nombre de la base de datos
-      - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything # Contraseña del usuario 'postgres'
-      - POSTGRESQL_ENABLE_POSTGIS=true # Ejemplo de extensión (opcional)
-    volumes:
-      - pg_data_keycloak:/bitnami/postgresql # Persistencia de datos
-    #- ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
-    ports:
-      - "5433:5432" # Puerto expuesto (host:contenedor)
-    networks:
-      - fresh_framework_network # Red personalizada
-
-  keycloak:
-    image: bitnami/keycloak:latest
-    depends_on:
-      - fresh_framework_network
-    ports:
-      - "8187:8187"
-    environment:
-      - KEYCLOAK_ADMIN_USER=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin_secure_password
-      - KEYCLOAK_DATABASE_HOST=postgresql_keycloak
-      - KEYCLOAK_DATABASE_PORT=5432
-      - KEYCLOAK_DATABASE_NAME=keycloak_database
-      - KEYCLOAK_DATABASE_USER=adrian
-      - KEYCLOAK_DATABASE_PASSWORD=adrian_dark_draw_everything
-      - KEYCLOAK_HTTP_PORT=8186
-      - KEYCLOAK_HTTPS_PORT=8187
-      - KEYCLOAK_ENABLE_HTTPS=true
-      - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/cert.pem # opcional, pero deja
-      - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/key.pem # opcional, pero deja
-      - KEYCLOAK_HTTPS_KEY_STORE_FILE=/opt/bitnami/keycloak/certs/keystore.jks
-      - KEYCLOAK_HTTPS_TRUST_STORE_FILE=/opt/bitnami/keycloak/certs/truststore.jks
-      - KEYCLOAK_HTTPS_KEY_STORE_PASSWORD=123456
-      - KEYCLOAK_HTTPS_TRUST_STORE_PASSWORD=123456
-    networks:
-      - fresh_framework_network
-    volumes:
-      - ./certs/keystore.jks:/opt/bitnami/keycloak/certs/keystore.jks:ro
-      - ./certs/truststore.jks:/opt/bitnami/keycloak/certs/truststore.jks:ro
-
-    deploy:
-      mode: replicated
-      replicas: 1
+      - fresh_framework_network  # Red personalizada
