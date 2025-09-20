@@ -1,0 +1,39 @@
+name: Create All Networks to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Networks on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+
+            # Lista de networks a crear
+            NETWORKS=("traefik-public" "fresh-backend" "fastify-api")
+
+            for NETWORK_NAME in "${NETWORKS[@]}"; do
+              if sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+                echo "La network '$NETWORK_NAME' ya existe. Omitiendo creación."
+              else
+                echo "Creando network '$NETWORK_NAME'..."
+                sudo docker network create \
+                  --driver=overlay \
+                  --attachable \
+                  --external=false \
+                  --opt encrypted \
+                  "$NETWORK_NAME"
+                echo "Network '$NETWORK_NAME' creada correctamente."
+              fi
+            done
+            echo "✅ Todas las networks fueron creadas o ya existían."
