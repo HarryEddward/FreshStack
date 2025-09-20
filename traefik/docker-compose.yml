@@ -44,8 +44,8 @@ services:
         - "traefik.http.routers.traefik.service=api@internal"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.tls=true"
-        - "traefik.http.routers.traefik.middlewares=auth"
-        - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$ejemploHashedPassword"  # Genera con htpasswd
+        #- "traefik.http.routers.traefik.middlewares=auth"
+        #- "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$ejemploHashedPassword"  # Genera con htpasswd
 
   # Ejemplo de servicio (adapta para client-app, employee-app, etc.)
   whoami:
