@@ -1,4 +1,4 @@
-name: Deploy to VPS
+name: Update Changes Repo to VPS
 
 on:
   push:
