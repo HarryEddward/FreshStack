@@ -1,0 +1,76 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Permite ejecutar manualmente
+
+env:
+  PROJECT_PATH: /home/ubuntu/cafebuy  # Cambia esta ruta por la de tu proyecto
+  REPO_URL: https://github.com/${{ github.repository }}.git
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync repository to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e  # Salir si hay algún error
+            
+            echo "🚀 Sincronizando repositorio..."
+            
+            # Verificar si el directorio del proyecto existe
+            if [ ! -d "$PROJECT_PATH" ]; then
+              echo "📁 Directorio no existe. Clonando repositorio..."
+              
+              # Crear directorio padre si no existe
+              mkdir -p "$(dirname "$PROJECT_PATH")"
+              
+              # Clonar el repositorio
+              git clone "$REPO_URL" "$PROJECT_PATH"
+              
+              echo "✅ Repositorio clonado en $PROJECT_PATH"
+            else
+              echo "📂 Directorio existe. Actualizando..."
+              
+              cd "$PROJECT_PATH"
+              
+              # Verificar si es un repositorio git válido
+              if [ ! -d ".git" ]; then
+                echo "❌ No es un repositorio git válido"
+                echo "🔄 Eliminando y clonando de nuevo..."
+                cd ..
+                rm -rf "$PROJECT_PATH"
+                git clone "$REPO_URL" "$PROJECT_PATH"
+                echo "✅ Repositorio clonado nuevamente"
+              else
+                echo "🔄 Descargando cambios..."
+                
+                # Guardar cambios locales temporalmente
+                git stash push -m "Auto-backup $(date)" --include-untracked || true
+                
+                # Obtener cambios del remoto
+                git fetch origin
+                
+                # Actualizar a la última versión
+                git reset --hard origin/main
+                
+                # Limpiar archivos no deseados
+                git clean -fd
+                
+                echo "✅ Repositorio actualizado"
+              fi
+            fi
+            
+            echo "📍 Archivos sincronizados en: $PROJECT_PATH"
+            echo "⏰ Completado: $(date)"
