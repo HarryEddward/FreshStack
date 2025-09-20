@@ -28,7 +28,7 @@ jobs:
           script: |
             set -e  # Salir si hay algún error
             
-            echo "🚀 Sincronizando repositorio..."
+            echo "Sincronizando repositorio..."
             
             # Verificar si el directorio del proyecto existe
             if [ ! -d "$PROJECT_PATH" ]; then
@@ -73,5 +73,5 @@ jobs:
               fi
             fi
             
-            echo "📍 Archivos sincronizados en: $PROJECT_PATH"
-            echo "⏰ Completado: $(date)"
+            echo "Archivos sincronizados en: $PROJECT_PATH"
+            echo "Completado: $(date)"
