@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     steps:
       - name: Pull Docker Images on VPS
@@ -29,6 +29,16 @@ jobs:
             IMAGES=(
               "traefik:v3.1"
               "traefik/whoami:latest"
+              "jenkins/jenkins:lts"
+              "jenkins/inbound-agent:latest"
+              "bitnami/redis:latest"
+              "bitnami/redis-sentinel:latest"
+              "chrislusf/seaweedfs"
+              "denoland/deno:alpine-1.41.2"
+              "node:18-alpine"
+              "quay.io/keycloak/keycloak:latest"
+              "bitnami/pgbouncer:latest"
+              "bitnami/postgresql-repmgr:16"
             )
 
             for IMAGE in "${IMAGES[@]}"; do

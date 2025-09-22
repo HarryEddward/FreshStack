@@ -53,10 +53,13 @@ sidebar_position: 1
 - ✅ Aplicar variables sobre certificados CA SSL directamente como secretos en docker swarm
 - ✅ Exponer treafik en público con SSL autofirado en el dominio "www.cafebuy.es"
 - ✅ Poner SSL a producción a treafik como secretos de Docker Swarm
+- ✅ Creación del subdominio con referencia a SSH aplicado llamado: "ssh.cafebuy.es"
 - 🏗️ Cambiar de configuración de host en el archivo de autoamtización de Realms en Keycloak referenciado directamente en el dominio público
 - ✅ Crear entorno de pruebas directamente a producción sobre el VPS
 - 🏗️ Aplicar Treafik el OSWAP del plugin ModSecurity entrelazado a Fresh
 - ✅ Aplicar certificados a producción CA del SSL aplicado como proxy principal de Treafik
+- ✅ 
+- 🏗️ Descargar todas las imagenes necesarias al nodo maestro desde Github Actions
 - 🏗️ Pruebas de producción con Keycloak aplicado en SSL Wrapper con Treafik
 - ❌ Crear un componente de Preact para la gestión con IndexDB sobre los objetos blob
 - ❌ Eliminar la configuración de SSL autofiramdo en Android a producción (res/xml/network_security_config.xml)

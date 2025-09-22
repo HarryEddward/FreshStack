@@ -1,0 +1,187 @@
+
+secrets:
+  REDIS_MASTER_SECRET:
+    external: true
+
+networks:
+  hairdresser_network:
+    external: true
+  traefik-net:
+    external: true
+
+volumes:
+  redis_primary_data_hairdresser_test_1:
+    driver: local
+  redis_sentinel_master_data_tes:  # Renamed for master Sentinel
+    driver: local
+  redis_secondary_data_test_1:
+    driver: local
+  redis_sentinel_master_sec_data_tes:
+    driver: local
+  redis_slave_data_1:  # Separate volume for slave Sentinel
+    driver: local
+  redis_slave_sec_data_1:
+    driver: local
+
+services:
+
+  redis_master_primary:
+    image: bitnami/redis:latest
+    container_name: redis_master_primary
+    hostname: redis_master_primary
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_MASTER_SECRET) -p 6381 ping | grep PONG || exit 1"]
+
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    secrets:
+      - REDIS_MASTER_SECRET
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=SECRETPWS
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+      - ALLOW_EMPTY_PASSWORD=no
+      - REDIS_AOF_ENABLED=no
+      - REDIS_VM_OVERCOMMIT_MEMORY=1
+      - REDIS_PORT_NUMBER=6381
+    volumes:
+      - /bitnami/peluqueriamael/redis_master_primary/data:/bitnami/redis/data
+    ports:
+      - "6381:6381"
+    networks:
+      - hairdresser_network
+    deploy:
+      restart_policy:
+        condition: any
+
+  redis_master_secondary:
+    image: bitnami/redis:latest
+    container_name: redis_master_secondary
+    hostname: redis_master_secondary
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_MASTER_SECRET) -p 6379 ping | grep PONG || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    secrets:
+     - REDIS_MASTER_SECRET
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=SECRETPWS
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+      - ALLOW_EMPTY_PASSWORD=no
+      - REDIS_AOF_ENABLED=no
+      - REDIS_VM_OVERCOMMIT_MEMORY=1
+      - REDIS_DEFAULT_PORT_NUMBER=6379
+      - REDIS_PORT_NUMBER=6379
+    volumes:
+      - /bitnami/peluqueriamael/redis_master_secondary/data:/bitnami/redis/data
+    ports:
+      - "6379:6379"
+    networks:
+      - hairdresser_network
+    deploy:
+      restart_policy:
+        condition: any
+
+  # redis_sentinel_master:
+  #   image: bitnami/redis-sentinel:latest
+  #   container_name: redis_sentinel_master
+  #   secrets:
+  #     - REDIS_MASTER_SECRET
+  #   environment:
+  #     - REDIS_MASTER_HOST=redis_master_primary  # Ensure correct hostname
+  #     - REDIS_MASTER_PORT_NUMBER=6381
+  #     - REDIS_MASTER_PASSWORD=SECRETPWS
+  #     - REDIS_SENTINEL_PASSWORD=SECRETPWS
+  #     - REDIS_SENTINEL_QUORUM=2
+  #     - REDIS_SENTINEL_DOWN_AFTER=5000
+  #     - REDIS_SENTINEL_FAILOVER_TIMEOUT=60000
+  #     - REDIS_SENTINEL_PARALLEL_SYNCS=1
+  #     - REDIS_SENTINEL_RESOLVE_HOSTNAMES=yes
+  #     - REDIS_SENTINEL_DEFAULT_PORT_NUMBER=26380
+  #     - REDIS_SENTINEL_PORT_NUMBER=26380
+  #   volumes:
+  #     - redis_sentinel_master_data_tes:/bitnami  # Unique volume
+  #   depends_on:
+  #     - redis_master_primary
+  #   networks:
+  #     - hairdresser_network
+  #   ports:
+  #     - "26380:26380"
+  #   deploy:
+  #     replicas: 1
+    
+  # redis_sentinel_master_sec:
+  #   image: bitnami/redis-sentinel:latest
+  #   container_name: redis_sentinel_master_sec
+  #   secrets:
+  #     - REDIS_MASTER_SECRET
+  #   environment:
+  #     - REDIS_MASTER_HOST=redis_master_primary
+  #     - REDIS_MASTER_PORT_NUMBER=6381
+  #     - REDIS_MASTER_PASSWORD=SECRETPWS
+  #     - REDIS_SENTINEL_PASSWORD=SECRETPWS
+  #     - REDIS_SENTINEL_QUORUM=2
+  #     - REDIS_SENTINEL_DOWN_AFTER=5000
+  #     - REDIS_SENTINEL_FAILOVER_TIMEOUT=60000
+  #     - REDIS_SENTINEL_PARALLEL_SYNCS=1
+  #     - REDIS_SENTINEL_RESOLVE_HOSTNAMES=yes
+  #     - REDIS_SENTINEL_DEFAULT_PORT_NUMBER=26379
+  #     - REDIS_SENTINEL_PORT_NUMBER=26379
+  #   volumes:
+  #     - redis_sentinel_master_sec_data_tes:/bitnami  # Unique volume
+  #   depends_on:
+  #     - redis_master_primary
+  #   networks:
+  #     - hairdresser_network
+  #   ports:
+  #     - "26379:26379"
+  #   deploy:
+  #     replicas: 1
+
+  redis_slave:
+    image: bitnami/redis:latest
+    container_name: redis_slave
+    secrets:
+      - REDIS_MASTER_SECRET
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis_master_primary
+      - REDIS_MASTER_PORT_NUMBER=6381
+      - REDIS_MASTER_PASSWORD=SECRETPWS
+      - REDIS_PASSWORD=SECRETPWS
+    volumes:
+      - /bitnami/peluqueriamael/redis_slave/data:/bitnami/redis/data
+    networks:
+      - hairdresser_network
+    depends_on:
+      - redismaster
+    deploy:
+      restart_policy:
+        condition: any
+    
+  
+  redis_slave_sec:
+    image: bitnami/redis:latest
+    container_name: redis_slave_sec
+    secrets:
+      - REDIS_MASTER_SECRET
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis_master_secondary
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=SECRETPWS
+      - REDIS_PASSWORD=SECRETPWS
+    volumes:
+      - /bitnami/peluqueriamael/redis_slave_sec/data:/bitnami/redis/data
+    networks:
+      - hairdresser_network
+    depends_on:
+      - redismaster
+    deploy:
+      restart_policy:
+        condition: any

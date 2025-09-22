@@ -1,0 +1,84 @@
+networks:
+  jenkins_network:
+    name: jenkins_network
+    driver: overlay
+    attachable: true
+
+volumes:
+  jenkins_home:
+    driver: local
+  jenkins_agent_home:
+    driver: local
+  jenkins_agent_ssh_home_prod:
+    driver: local
+
+secrets:
+  JENKINS_AGENT_SECRET_JNLP:
+    external: true
+  JENKINS_AGENT_SSH_PRIVATE_KEY:
+    external: true
+
+services:
+  jenkinsmaster:
+    image: jenkins/jenkins:lts
+    container_name: jenkinsmaster
+    user: root
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    networks:
+      - jenkins_network
+
+  jenkins_agent:
+    image: jenkins/inbound-agent:latest
+    user: root
+    deploy:
+      replicas: 1
+    secrets:
+      - source: JENKINS_AGENT_SECRET_JNLP
+        target: /run/secrets/JENKINS_AGENT_SECRET_JNLP
+    environment:
+      - JENKINS_URL=http://jenkinsmaster:8080
+      #- JENKINS_TUNNEL=jenkinsmaster:50000
+      - JENKINS_SECRET=/run/secrets/JENKINS_AGENT_SECRET_JNLP
+      - JENKINS_AGENT_NAME=jenkins_agent
+      #- JENKINS_AGENT_WORKDIR=/var/jenkins_agent
+      #- JENKINS_PROTOCOL=JNLP4-connect
+    volumes:
+      - jenkins_agent_home:/home/jenkins/agent
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    networks:
+      - jenkins_network
+    entrypoint: "/bin/sh -e -c 'jenkins-agent -secret $$(cat /run/secrets/JENKINS_AGENT_SECRET_JNLP)'"
+    depends_on:
+      - jenkinsmaster
+
+  
+  #jenkinsagentssh:
+  #  image: jenkins/ssh-agent:latest
+  #  deploy:
+  #    replicas: 1
+  #  ports:
+  #    - "2200:22"
+  #  secrets:
+  #    - source: JENKINS_AGENT_SSH_PRIVATE_KEY
+  #      target: /run/secrets/ssh_private_key
+  #  entrypoint: /bin/sh -c "eval $$(ssh-agent -s) && echo '$$(cat /run/secrets/ssh_private_key)' | ssh-add - && exec jenkins-agent"
+  #  volumes:
+  #    - jenkins_agent_ssh_home_prod:/home/jenkins/agent
+  #  environment:
+  #    - JENKINS_AGENT_SSH_PUBKEY=AAAAB3NzaC1yc2EAAAADAQABAAACAQCjtljY2hX1vrh9kx16HH3mdcvy1qjxxJffMTwsMH98UaNhiWur0F9x7sdj0CpsQJXHGOtYkT6LPuFvvhuCOAImYNep0bsmDMmnW1EeUg+oS9rPa1qO/yX0AW9t/obQmwI7C2c4TRCb4f5DqqGLL5WGr0p9KpzzTcZ2flSA9f+WMf3HAoFtZJR7sGpKjYNdXGcm9hw0cQDKljxcZJ3TU/I8caADyzeiJJblhu58ke7BBBTn+N2pEj7aAL81cAm9h8PazH6lkb8LMoKY4jsipqCItUxvjBq7f7soZUWwl0kGHD2TKcenKjHNBbW7QXzT63/y/LAqGQLwhfwL9LzdOVkUATTidk3nXgHQODEeLKTDYYqth6NMk+xiODVpbymmZAyZxezDZG6gVw3ikjItdqvE9hH3/vN7OQMNIpKfjXC1n9cxmK+TJdOvwuyrDvEMZlO8ErFiJX3SdeZBbw6fgM5MUl+v6EJ1UR0nVrxE0oMuHf/Zxms8gHc5cjU61XVPcRhlEpmD4KmSYd+3ln4HO2gKQO7Jkgs8s6eaSMpgq21hcstv+s+h2ld/sESBs5TYbCldlCIhDhdAa2/a8/4f6G+Ia7PNFn30auDv/ovaIM9F7jFN2EQK7nYcDZgeOOvlP/1J67ixb3EKevNI/w81o8z/6Q2JztSJgflO6zmmmjS53Q==
+  #  networks:
+  #    - jenkins_network
+  #  depends_on:
+  #    - jenkinsmaster

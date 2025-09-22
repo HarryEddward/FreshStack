@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    rate-limiter:
+      rateLimit:
+        average: 1      # Número promedio de solicitudes permitidas por segundo
+        burst: 2      # Número máximo de solicitudes en ráfaga permitidas
+    waf:
+      plugin:
+        traefik-modsecurity-plugin:
+          modSecurityUrl: "http://waf:8080"
+          maxBodySize: 10485760
+
+  routers:
+    api-router:
+      rule: "Host(`api.localhost`)"
+      service: api-service
+      middlewares:
+        - rate-limiter
+        - waf
+      entryPoints:
+        - web
+
+
+
+  services:
+    
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://hairdresser_app_api:8000"
