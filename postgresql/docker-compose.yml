@@ -1,7 +1,7 @@
 version: '3.7'
 
 networks:
-  fresh_framework_network:
+  traefik-public:
     external: true
 
 volumes:
@@ -44,7 +44,7 @@ services:
     volumes:
       - pg_primary_data:/bitnami/postgresql
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # PostgreSQL Replica para aplicación principal
   postgres-replica:
@@ -76,7 +76,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # PgBouncer para aplicación principal - configuración directa
   pgbouncer:
@@ -119,7 +119,7 @@ services:
         condition: on-failure
         delay: 5s
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # PostgreSQL Primary para Keycloak
   postgresql-keycloak-primary:
@@ -146,7 +146,7 @@ services:
     volumes:
       - pg_primary_data_keycloak:/bitnami/postgresql
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # PostgreSQL Replica para Keycloak
   postgresql-keycloak-replica:
@@ -178,7 +178,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # PgBouncer para Keycloak - configuración directa
   pgbouncer-keycloak:
@@ -220,7 +220,7 @@ services:
         condition: on-failure
         delay: 5s
     networks:
-      - fresh_framework_network
+      - traefik-public
 
   # Keycloak Node 1 - Updated for official image, production, and HA readiness
   keycloak-node1:
@@ -271,4 +271,4 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - fresh_framework_network
+      - traefik-traefik-public
