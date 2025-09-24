@@ -226,51 +226,49 @@ services:
 
   # Keycloak Node 1 - Updated for official image, production, and HA readiness
   keycloak-node1:
-    image: quay.io/keycloak/keycloak:latest
-    hostname: keycloak-node1
-    command: start --verbose --import-realm
-    environment:
-      - KC_HTTP_ENABLED=true
-      - KC_HTTP_PORT=8080
-      - KC_CACHE=ispn  # Enables distributed Infinispan for HA
-      - KC_CACHE_STACK=jdbc-ping  # Uses Postgres for node discovery
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://pgbouncer-keycloak:5432/cafebuy-keycloak-database?connectTimeout=30000&socketTimeout=60000
-      - KC_DB_USERNAME=admin
-      - KC_DB_PASSWORD=admin_secure_password
-      - KC_DB_SCHEMA=public
-      - KC_PROXY=edge
-      - KC_TRANSACTION_XA_ENABLED=true
-      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
-      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin_secure_password
-      - KC_HEALTH_ENABLED=true
-      - KC_METRICS_ENABLED=true
-      - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME=www.cafebuy.es
-      - KC_HTTP_RELATIVE_PATH=/oauth
-      - KC_PROXY_HEADERS=xforwarded
-      - KC_PROXY_PROTOCOL_ENABLED=false
-    volumes:
-      - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
-      - ./keycloak/themes:/opt/keycloak/providers/
-      - keycloak_data_node1:/opt/keycloak/data  # Persist data imports/exports; optional for HA
-    ports:
-      - "8186:8080"  # HTTP access
-      - "9000:9000"  # Admin console
-      - "7800:7800"  # JGroups/Infinispan clustering (TCP)
-    depends_on:
-      - pgbouncer-keycloak
-    deploy:
-      replicas: 2  # Start with 1 for testing; scale to 2+ for HA after verifying startup
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
-        - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
-        - "traefik.http.routers.keycloak.entrypoints=websecure"
-        - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
-        - "traefik.http.middlewares.keycloak-stripprefix.stripPrefix.prefixes=/oauth"
-        - "traefik.http.routers.keycloak.middlewares=keycloak-stripprefix"
-      restart_policy:
-        condition: on-failure
-    networks:
-      - traefik-public
+  image: quay.io/keycloak/keycloak:latest
+  hostname: keycloak-node1
+  command: start --verbose --import-realm
+  environment:
+    - KC_HTTP_ENABLED=true
+    - KC_HTTP_PORT=8080
+    - KC_CACHE=ispn
+    - KC_CACHE_STACK=jdbc-ping
+    - KC_DB=postgres
+    - KC_DB_URL=jdbc:postgresql://pgbouncer-keycloak:5432/cafebuy-keycloak-database?connectTimeout=30000&socketTimeout=60000
+    - KC_DB_USERNAME=admin
+    - KC_DB_PASSWORD=admin_secure_password
+    - KC_DB_SCHEMA=public
+    - KC_PROXY=edge
+    - KC_TRANSACTION_XA_ENABLED=true
+    - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+    - KC_BOOTSTRAP_ADMIN_PASSWORD=admin_secure_password
+    - KC_HEALTH_ENABLED=true
+    - KC_METRICS_ENABLED=true
+    - KC_HOSTNAME_STRICT=false
+    - KC_HOSTNAME=www.cafebuy.es
+    - KC_HTTP_RELATIVE_PATH=/oauth
+    - KC_PROXY_HEADERS=xforwarded
+    - KC_PROXY_PROTOCOL_ENABLED=false
+  volumes:
+    - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
+    - ./keycloak/themes:/opt/keycloak/providers/
+    - keycloak_data_node1:/opt/keycloak/data
+  ports:
+    - "8186:8080"
+    - "9000:9000"
+    - "7800:7800"
+  depends_on:
+    - pgbouncer-keycloak
+  deploy:
+    replicas: 2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
+    restart_policy:
+      condition: on-failure
+  networks:
+    - traefik-public
