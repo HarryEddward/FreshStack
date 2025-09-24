@@ -260,14 +260,15 @@ services:
       - pgbouncer-keycloak
     deploy:
       replicas: 2  # Start with 1 for testing; scale to 2+ for HA after verifying startup
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+        - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
+        - "traefik.http.routers.keycloak.entrypoints=websecure"
+        - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
+        - "traefik.http.middlewares.keycloak-stripprefix.stripPrefix.prefixes=/oauth"
+        - "traefik.http.routers.keycloak.middlewares=keycloak-stripprefix"
       restart_policy:
         condition: on-failure
     networks:
       - fresh_framework_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=PathPrefix(`/auth-keycloak`)"
-      - "traefik.http.routers.keycloak.entrypoints=websecure"
-      - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
-      - "traefik.http.routers.keycloak.middlewares=strip-keycloak,security-headers@docker"
-      - "traefik.http.middlewares.strip-keycloak.stripPrefix.prefixes=/auth-keycloak"
