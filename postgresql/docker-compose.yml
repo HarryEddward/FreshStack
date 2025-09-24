@@ -272,3 +272,4 @@ services:
       condition: on-failure
   networks:
     - traefik-public
+  
