@@ -246,7 +246,7 @@ services:
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
       - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME=localhost  # Change to your domain in production (e.g., keycloak.yourdomain.com)
+      - KC_HOSTNAME=www.cafebuy.es
       - KC_HTTP_RELATIVE_PATH=/
       - KC_PROXY_HEADERS=xforwarded
       - KC_PROXY_PROTOCOL_ENABLED=false
