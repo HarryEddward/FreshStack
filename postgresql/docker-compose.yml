@@ -246,7 +246,7 @@ services:
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
       - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME=www.cafebuy.es
+      - KC_HOSTNAME=https://www.cafebuy.es/oauth
       - KC_HTTP_RELATIVE_PATH=/oauth
       - KC_PROXY_HEADERS=xforwarded
       - KC_PROXY_PROTOCOL_ENABLED=false
