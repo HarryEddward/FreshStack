@@ -1,8 +1,9 @@
-version: '3.9'
 
 volumes:
   seaweedfs_volume:
+    driver: local
   seaweedfs_filer_data:
+    driver: local
 
 configs:
   settings_json:
@@ -11,57 +12,87 @@ configs:
 networks:
   seaweedfs:
     driver: overlay
+  traefik-public:
+    external: true
 
 services:
   master:
     image: chrislusf/seaweedfs
+    command: "master -ip=master -ip.bind=0.0.0.0"
     ports:
       - 9333:9333
       - 19333:19333
       - 9324:9324
-    command: "master -ip=master -ip.bind=0.0.0.0"
+    deploy:
+      replicas: 2
+      placement:
+        max_replicas_per_node: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.master.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/master`)"
+        - "traefik.http.routers.master.entrypoints=websecure"
+        - "traefik.http.routers.master.tls.certresolver=myresolver"
+        - "traefik.http.services.master.loadbalancer.server.port=9333"
     networks:
       - seaweedfs
+      - traefik-public
+
   volume:
     image: chrislusf/seaweedfs
+    command: 'volume -mserver="master:9333" -ip=volume -ip.bind=0.0.0.0 -port=8080 -max=100'
     ports:
       - 8080:8080
       - 18080:18080
       - 9325:9325
-    command: 'volume -mserver="master:9333" -ip=volume -ip.bind=0.0.0.0 -port=8080 -max=100'
     volumes:
       - seaweedfs_volume:/data
     depends_on:
       - master
+    deploy:
+      replicas: 3
+      placement:
+        max_replicas_per_node: 1
     networks:
       - seaweedfs
+
   filer:
     image: chrislusf/seaweedfs
+    command: 'filer -master="master:9333" -ip=filer -ip.bind=0.0.0.0'
     ports:
       - 8888:8888
       - 18888:18888
       - 9326:9326
-    command: 'filer -master="master:9333" -ip=filer -ip.bind=0.0.0.0'
-    tty: true
-    stdin_open: true
-    deploy:
-      replicas: 1
     volumes:
       - seaweedfs_filer_data:/data/filerldb2
     depends_on:
       - master
       - volume
+    deploy:
+      replicas: 2
+      placement:
+        max_replicas_per_node: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.filer.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/filer`)"
+        - "traefik.http.routers.filer.entrypoints=websecure"
+        - "traefik.http.routers.filer.tls.certresolver=myresolver"
+        - "traefik.http.services.filer.loadbalancer.server.port=8888"
     networks:
       - seaweedfs
+      - traefik-public
+
   s3:
     image: chrislusf/seaweedfs
-    ports:
-      - 8334:8334
     command: >
-      s3 -filer="filer:8888" -ip.bind=0.0.0.0 -port.https=8334
+      s3 -filer="filer:8888" -ip.bind=0.0.0.0 -port=8334
       -key.file=/etc/seaweedfs/certs/server-key.pem
       -cert.file=/etc/seaweedfs/certs/server-cert.pem
       -config=/etc/seaweedfs/s3.json
+    ports:
+      - 8334:8334
+    
     volumes:
       - ./certs:/etc/seaweedfs/certs:ro
       - ./s3.json:/etc/seaweedfs/s3.json:ro
@@ -70,16 +101,41 @@ services:
       - volume
       - filer
     restart: unless-stopped
+    deploy:
+      replicas: 2
+      placement:
+        max_replicas_per_node: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
+        - "traefik.http.routers.s3.entrypoints=websecure"
+        - "traefik.http.routers.s3.tls.certresolver=myresolver"
+        - "traefik.http.services.s3.loadbalancer.server.port=8334"
     networks:
       - seaweedfs
+      - traefik-public
+
   webdav:
     image: chrislusf/seaweedfs
+    command: 'webdav -filer="filer:8888"'
     ports:
       - 7333:7333
-    command: 'webdav -filer="filer:8888"'
     depends_on:
       - master
       - volume
       - filer
+    deploy:
+      replicas: 2
+      placement:
+        max_replicas_per_node: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.webdav.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/webdav`)"
+        - "traefik.http.routers.webdav.entrypoints=websecure"
+        - "traefik.http.routers.webdav.tls.certresolver=myresolver"
+        - "traefik.http.services.webdav.loadbalancer.server.port=7333"
     networks:
       - seaweedfs
+      - traefik-public

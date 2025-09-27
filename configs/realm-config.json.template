@@ -1,0 +1,213 @@
+{
+  "realm": "cafebuy-realm",
+  "enabled": true,
+  "keycloakVersion": "latest",
+
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 9000,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 2592000,
+  "ssoSessionMaxLifespanRememberMe": 31536000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+
+
+  "sslRequired": "none",
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxTemporaryLockouts": 0,
+  "bruteForceStrategy": "MULTIPLE",
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "browserSecurityHeaders": {
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xContentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains",
+    "contentSecurityPolicyReportOnly": ""
+  },
+
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  
+  "eventsEnabled": true,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "defaultLocale": "es",
+
+
+  
+  "passwordPolicy": "upperCase(1) and length(12) and forceExpiredPasswordChange(180) and notUsername(undefined) and lowerCase(1) and specialChars(1) and digits(1) and hashIterations(275000)",
+  
+  "smtpServer": {
+    "host": "",
+    "port": "",
+    "from": "",
+    "fromDisplayName": "",
+    "replyTo": "",
+    "replyToDisplayName": "",
+    "starttls": false,
+    "auth": false,
+    "user": "",
+    "password": ""
+  },
+
+  
+
+  "loginTheme": "cafebuy-theme",
+
+  "roles": {
+    "realm": [
+      {
+        "name": "client",
+        "description": "Role for customers using the Client App"
+      },
+      {
+        "name": "employee",
+        "description": "Role for employees using the Employee App"
+      },
+      {
+        "name": "admin",
+        "description": "Role for administrators using the Business Web"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "cafebuy-backend-server",
+      "name": "Backend Server (Confidential)",
+      "description": "Confidential client for server-side authentication",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "your-backend-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [
+        "https://www.cafebuy.es/oauth/*"
+      ],
+      "webOrigins": [
+        "https://www.cafebuy.es"
+      ],
+      "attributes": {
+        "access.token.lifespan": "36000"
+      },
+      "protocolMappers": [
+        {
+          "name": "role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "cafebuy-client-app",
+      "name": "Client App (Public)",
+      "description": "Public client for mobile app",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://www.cafebuy.es/oauth/api/v1/public/oauth/callback/app"
+      ],
+      "webOrigins": [
+        "https://www.cafebuy.es"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "900"
+      },
+      "protocolMappers": [
+        {
+          "name": "role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "cafebuy-business-web",
+      "name": "Business Web (Public)",
+      "description": "Public client for web application",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://www.cafebuy.es/oauth/api/v1/public/oauth/callback/web"
+      ],
+      "webOrigins": [
+        "https://www.cafebuy.es"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "1800"
+      },
+      "protocolMappers": [
+        {
+          "name": "role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "web-origins",
+    "acr",
+    "roles",
+    "profile",
+    "email"
+  ],
+  "defaultOptionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access"
+  ]
+}
