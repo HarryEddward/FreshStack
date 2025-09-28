@@ -39,6 +39,7 @@ jobs:
               "quay.io/keycloak/keycloak:latest"
               "bitnami/pgbouncer:latest"
               "bitnami/postgresql-repmgr:16"
+              "denoland/deno:alpine"
             )
 
             for IMAGE in "${IMAGES[@]}"; do

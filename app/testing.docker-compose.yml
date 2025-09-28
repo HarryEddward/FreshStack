@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  fresh-dev:
+    image: denoland/deno:alpine
+    working_dir: /app
+    volumes:
+      - ./src:/app/src
+      - ./routes:/app/routes
+      - ./islands:/app/islands
+      - ./static:/app/static
+      - ./deno.json:/app/deno.json
+    command: sh -c "deno task start --allow-net --allow-read"
+    ports:
+      - "8000:8000"
+    environment:
+      - DENO_DIR=/deno-dir
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
