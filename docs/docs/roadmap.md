@@ -61,8 +61,8 @@ sidebar_position: 1
 - ✅ Keycloak en Producción en HA aplicado
 - ✅ Descargar todas las imagenes necesarias al nodo maestro desde Github Actions
 - ✅ Pruebas de producción con Keycloak aplicado en SSL Wrapper con Treafik
-- 🏗️
-- 🏗️ Aplicar archivo CI/CD de Github Actions para aplicar secretos nuevos al haber un nuevo cambio aplicados en Docker Swarm desde Github del repositorio.
+- 🏗️ 
+- ✅ Aplicar archivo CI/CD de Github Actions para aplicar la automatización de nuevos secretos al haber un nuevo cambio aplicados en Docker Swarm desde Github del repositorio.
 - 🏗️ Reconfigurar todo el entorno local a testeo en producción del proyecto
 - ❌ Crear un componente de Preact para la gestión con IndexDB sobre los objetos blob
 - ❌ Eliminar la configuración de SSL autofiramdo en Android a producción (res/xml/network_security_config.xml)
