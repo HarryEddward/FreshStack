@@ -104,7 +104,7 @@
       "description": "Confidential client for server-side authentication",
       "enabled": true,
       "publicClient": false,
-      "secret": "your-backend-secret",
+      "secret": "${KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET}",
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
