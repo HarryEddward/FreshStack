@@ -4,6 +4,7 @@ networks:
     external: true
   seaweedfs:
     driver: overlay
+    attachable: true
 
 volumes:
   seaweedfs_volume:
@@ -26,16 +27,13 @@ configs:
 services:
   master:
     image: chrislusf/seaweedfs:latest
-    command: "master -ip=master -ip.bind=0.0.0.0"
-    ports:
-      - "9333:9333"
-      - "19333:19333"
-      - "9324:9324"
+    command: "master -ip=master -ip.bind=0.0.0.0 -port=9333"
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       placement:
-        max_replicas_per_node: 1
+        constraints:
+          - node.role == manager
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
@@ -44,6 +42,7 @@ services:
         - "traefik.http.routers.seaweedfs-master.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-master.loadbalancer.server.port=9333"
         - "traefik.http.middlewares.seaweedfs-master-strip.stripprefix.prefixes=/seaweedfs/master"
+        - "traefik.http.middlewares.seaweedfs-master-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-master.middlewares=seaweedfs-master-strip"
       restart_policy:
         condition: on-failure
@@ -55,20 +54,15 @@ services:
 
   volume:
     image: chrislusf/seaweedfs:latest
-    command: 'volume -mserver="master:9333" -ip=volume -ip.bind=0.0.0.0 -port=8080 -max=100'
-    ports:
-      - "8080:8080"
-      - "18080:18080"
-      - "9325:9325"
+    command: 'volume -mserver="master:9333" -ip.bind=0.0.0.0 -port=8080 -max=100 -publicUrl=volume:8080'
     volumes:
       - seaweedfs_volume:/data
     depends_on:
       - master
     deploy:
       mode: replicated
-      replicas: 3
-      placement:
-        max_replicas_per_node: 1
+      replicas: 2
+      endpoint_mode: dnsrr
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -78,11 +72,7 @@ services:
 
   filer:
     image: chrislusf/seaweedfs:latest
-    command: 'filer -master="master:9333" -ip=filer -ip.bind=0.0.0.0'
-    ports:
-      - "8888:8888"
-      - "18888:18888"
-      - "9326:9326"
+    command: 'filer -master="master:9333" -ip.bind=0.0.0.0 -port=8888'
     volumes:
       - seaweedfs_filer_data:/data/filerldb2
     depends_on:
@@ -90,9 +80,7 @@ services:
       - volume
     deploy:
       mode: replicated
-      replicas: 2
-      placement:
-        max_replicas_per_node: 1
+      replicas: 1
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
@@ -101,6 +89,7 @@ services:
         - "traefik.http.routers.seaweedfs-filer.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-filer.loadbalancer.server.port=8888"
         - "traefik.http.middlewares.seaweedfs-filer-strip.stripprefix.prefixes=/seaweedfs/filer"
+        - "traefik.http.middlewares.seaweedfs-filer-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-filer.middlewares=seaweedfs-filer-strip"
       restart_policy:
         condition: on-failure
@@ -115,14 +104,49 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        # Verificar que los archivos de secrets existen
+        if [ ! -f /run/secrets/seaweedfs_s3_access_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_access_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_secret_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_secret_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_username ]; then
+          echo "ERROR: Secret seaweedfs_s3_username no encontrado"
+          exit 1
+        fi
+        
+        # Leer secrets
         S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key)
         S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key)
         S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username)
         export S3_ACCESS_KEY S3_SECRET_KEY S3_USERNAME
+        
+        # Generar configuración
         envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
-        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json
-    ports:
-      - "8333:8333"
+        
+        echo "=== Configuración S3 generada ==="
+        cat /etc/seaweedfs/s3.json
+        echo "================================="
+        
+        # Esperar a que filer esté disponible
+        echo "Esperando a que filer esté disponible..."
+        until nc -z filer 8888; do
+          echo "Filer no disponible, reintentando en 2s..."
+          sleep 2
+        done
+        echo "Filer disponible, iniciando S3..."
+        
+        # Iniciar servicio S3
+        exec weed s3 \
+          -filer=filer:8888 \
+          -ip.bind=0.0.0.0 \
+          -port=8333 \
+          -config=/etc/seaweedfs/s3.json \
+          -allowEmptyFolder=true \
+          -allowDeleteBucketNotEmpty=false
     configs:
       - source: s3_conf
         target: /etc/seaweedfs/s3.json.template
@@ -137,18 +161,26 @@ services:
       - filer
     deploy:
       mode: replicated
-      replicas: 2
-      placement:
-        max_replicas_per_node: 1
+      replicas: 1
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
+        # S3 API en /seaweedfs/s3
         - "traefik.http.routers.seaweedfs-s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
         - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
         - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
+        # Middleware para strip prefix
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
-        - "traefik.http.routers.seaweedfs-s3.middlewares=seaweedfs-s3-strip"
+        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
+        # Headers para S3
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Origin=*"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Methods=GET,POST,PUT,DELETE,HEAD,OPTIONS"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Headers=*"
+        # Aplicar middlewares
+        - "traefik.http.routers.seaweedfs-s3.middlewares=seaweedfs-s3-strip,seaweedfs-s3-headers"
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -159,18 +191,14 @@ services:
 
   webdav:
     image: chrislusf/seaweedfs:latest
-    command: 'webdav -filer="filer:8888"'
-    ports:
-      - "7333:7333"
+    command: 'webdav -filer="filer:8888" -port=7333'
     depends_on:
       - master
       - volume
       - filer
     deploy:
       mode: replicated
-      replicas: 2
-      placement:
-        max_replicas_per_node: 1
+      replicas: 1
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
@@ -179,6 +207,7 @@ services:
         - "traefik.http.routers.seaweedfs-webdav.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-webdav.loadbalancer.server.port=7333"
         - "traefik.http.middlewares.seaweedfs-webdav-strip.stripprefix.prefixes=/seaweedfs/webdav"
+        - "traefik.http.middlewares.seaweedfs-webdav-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-webdav.middlewares=seaweedfs-webdav-strip"
       restart_policy:
         condition: on-failure
