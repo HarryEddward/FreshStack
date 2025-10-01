@@ -16,6 +16,8 @@ secrets:
     external: true
   seaweedfs_s3_secret_key:
     external: true
+  seaweedfs_s3_username:
+    external: true
 
 configs:
   s3_conf:
