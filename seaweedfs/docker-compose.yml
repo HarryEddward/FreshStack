@@ -83,41 +83,41 @@ services:
       - seaweedfs
       - traefik-public
 
-    s3:
-      image: chrislusf/seaweedfs
-      entrypoint: ["/bin/sh", "-c"]
-      command: |
-        "envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json && \
-        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8334 \
-          -config=/etc/seaweedfs/s3.json"
-      environment:
-        S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-        S3_SECRET_KEY: ${S3_SECRET_KEY}
-      volumes:
-        - ./certs:/etc/seaweedfs/certs:ro
-        - ./s3.json.template:/etc/seaweedfs/s3.json.template:ro
-      secrets:
-        - s3_access_key
-        - s3_secret_key
-      depends_on:
-        - master
-        - volume
-        - filer
-      restart: unless-stopped
-      deploy:
-        replicas: 2
-        placement:
-          max_replicas_per_node: 1
-        labels:
-          - "traefik.enable=true"
-          - "traefik.docker.network=traefik-public"
-          - "traefik.http.routers.s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
-          - "traefik.http.routers.s3.entrypoints=websecure"
-          - "traefik.http.routers.s3.tls.certresolver=myresolver"
-          - "traefik.http.services.s3.loadbalancer.server.port=8334"
-      networks:
-        - seaweedfs
-        - traefik-public
+  s3:
+    image: chrislusf/seaweedfs
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json && \
+      exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8334 \
+        -config=/etc/seaweedfs/s3.json"
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    volumes:
+      - ./certs:/etc/seaweedfs/certs:ro
+      - ./s3.json.template:/etc/seaweedfs/s3.json.template:ro
+    secrets:
+      - s3_access_key
+      - s3_secret_key
+    depends_on:
+      - master
+      - volume
+      - filer
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      placement:
+        max_replicas_per_node: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
+        - "traefik.http.routers.s3.entrypoints=websecure"
+        - "traefik.http.routers.s3.tls.certresolver=myresolver"
+        - "traefik.http.services.s3.loadbalancer.server.port=8334"
+    networks:
+      - seaweedfs
+      - traefik-public
 
   webdav:
     image: chrislusf/seaweedfs
