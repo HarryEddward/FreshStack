@@ -20,10 +20,6 @@ secrets:
   seaweedfs_s3_username:
     external: true
 
-configs:
-  s3_conf:
-    file: ./s3.json.template
-
 services:
   master:
     image: chrislusf/seaweedfs:latest
@@ -119,13 +115,33 @@ services:
         fi
         
         # Leer secrets
-        S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key)
-        S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key)
-        S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username)
-        export S3_ACCESS_KEY S3_SECRET_KEY S3_USERNAME
+        S3_ACCESS_KEY=$(cat /run/secrets/seaweedfs_s3_access_key)
+        S3_SECRET_KEY=$(cat /run/secrets/seaweedfs_s3_secret_key)
+        S3_USERNAME=$(cat /run/secrets/seaweedfs_s3_username)
         
-        # Generar configuración
-        envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
+        # Generar configuración manualmente (sin envsubst)
+        cat > /etc/seaweedfs/s3.json <<EOF
+        {
+          "identities": [
+            {
+              "name": "${S3_USERNAME}",
+              "credentials": [
+                {
+                  "accessKey": "${S3_ACCESS_KEY}",
+                  "secretKey": "${S3_SECRET_KEY}"
+                }
+              ],
+              "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+              ]
+            }
+          ]
+        }
+        EOF
         
         echo "=== Configuración S3 generada ==="
         cat /etc/seaweedfs/s3.json
@@ -133,11 +149,7 @@ services:
         
         # Esperar a que filer esté disponible
         echo "Esperando a que filer esté disponible..."
-        until nc -z filer 8888; do
-          echo "Filer no disponible, reintentando en 2s..."
-          sleep 2
-        done
-        echo "Filer disponible, iniciando S3..."
+        sleep 5
         
         # Iniciar servicio S3
         exec weed s3 \
@@ -147,10 +159,6 @@ services:
           -config=/etc/seaweedfs/s3.json \
           -allowEmptyFolder=true \
           -allowDeleteBucketNotEmpty=false
-    configs:
-      - source: s3_conf
-        target: /etc/seaweedfs/s3.json.template
-        mode: 0444
     secrets:
       - seaweedfs_s3_access_key
       - seaweedfs_s3_secret_key
