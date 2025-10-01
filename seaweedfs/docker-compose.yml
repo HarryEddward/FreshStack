@@ -115,7 +115,8 @@ services:
       - |
         S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key)
         S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key)
-        export S3_ACCESS_KEY S3_SECRET_KEY
+        S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username)
+        export S3_ACCESS_KEY S3_SECRET_KEY S3_USERNAME
         envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
         exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json
     ports:
@@ -127,6 +128,7 @@ services:
     secrets:
       - seaweedfs_s3_access_key
       - seaweedfs_s3_secret_key
+      - seaweedfs_s3_username
     depends_on:
       - master
       - volume
