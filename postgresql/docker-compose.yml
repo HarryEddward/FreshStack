@@ -253,7 +253,7 @@ services:
       - ./keycloak/themes:/opt/keycloak/providers/
       - keycloak_data_node1:/opt/keycloak/data
     ports:
-      - "8186:8080"
+      - "8186:8186"
       - "9000:9000"
       - "7800:7800"
     depends_on:
@@ -262,7 +262,7 @@ services:
       replicas: 2
       labels:
         - "traefik.enable=true"
-        - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+        - "traefik.http.services.keycloak.loadbalancer.server.port=8186"
         - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
         - "traefik.http.routers.keycloak.entrypoints=websecure"
         - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
