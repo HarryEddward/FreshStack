@@ -27,37 +27,26 @@ jobs:
           envs: PROJECT_PATH,REPO_URL
           script: |
             set -e
-            
             echo "==> Sincronizando repositorio..."
-            
             if [ ! -d "$PROJECT_PATH" ]; then
               echo "📁 Directorio no existe. Clonando repositorio..."
               mkdir -p "$(dirname "$PROJECT_PATH")"
               git clone "$REPO_URL" "$PROJECT_PATH"
-              echo "✅ Repositorio clonado en $PROJECT_PATH"
             else
               echo "📂 Directorio existe. Actualizando..."
               cd "$PROJECT_PATH"
-              
               if [ ! -d ".git" ]; then
-                echo "❌ No es un repositorio git válido"
-                echo "🔄 Eliminando y clonando de nuevo..."
                 cd ..
                 rm -rf "$PROJECT_PATH"
                 git clone "$REPO_URL" "$PROJECT_PATH"
-                echo "✅ Repositorio clonado nuevamente"
               else
-                echo "🔄 Descargando cambios..."
                 git stash push -m "Auto-backup $(date)" --include-untracked || true
                 git fetch origin
                 git reset --hard origin/main
                 git clean -fd
-                echo "✅ Repositorio actualizado"
               fi
             fi
-            
-            echo "Archivos sincronizados en: $PROJECT_PATH"
-            echo "Completado: $(date)"
+            echo "✅ Repositorio sincronizado en $PROJECT_PATH"
 
   # Job 2: Remover stacks existentes
   remove-stacks:
@@ -73,48 +62,15 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            
-            STACKS=(
-              "traefik"
-              "postgresql"
-              "seaweedfs"
-            )
-            
-            remove_stack() {
-              local stack_name=$1
+            STACKS=("traefik" "postgresql" "seaweedfs")
+            for stack_name in "${STACKS[@]}"; do
               echo "Removing stack: ${stack_name}"
               sudo docker stack rm "${stack_name}" 2>/dev/null || true
-              
               while sudo docker stack ls --format '{{.Name}}' | grep -q "^${stack_name}$"; do
-                echo "Waiting for ${stack_name} to be removed..."
                 sleep 3
               done
-              
-              echo "Stack removed: ${stack_name}"
-            }
-            
-            echo "==> Removing all stacks"
-            
-            for stack_name in "${STACKS[@]}"; do
-              remove_stack "${stack_name}"
             done
-            
-            echo "==> Waiting for all services to shut down..."
-            sleep 5
-            
-            retries=20
-            while [ "$(sudo docker service ls -q | wc -l)" -gt 0 ]; do
-              echo "Services still running, waiting..."
-              sleep 3
-              retries=$((retries - 1))
-              
-              if [ $retries -le 0 ]; then
-                echo "WARNING: Some services still running, continuing anyway"
-                break
-              fi
-            done
-            
-            echo "==> All stacks removed successfully"
+            echo "✅ Stacks removidos correctamente"
 
   # Job 3: Actualizar secretos
   update-secrets:
@@ -143,92 +99,63 @@ jobs:
           envs: SSL_CERT,SSL_KEY,FRESH_SESSION_SECRET,JENKINS_SECRET_KEY,KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET,POSTGRESQL_PASSWORD,POSTGRESQL_USERNAME,SEAWEEDFS_S3_ACCESS_KEY,SEAWEEDFS_S3_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_SECRET_KEY
           script: |
             set -e
-            
-            SECRETS=(
-              "SSL_CERT:ssl_cert"
-              "SSL_KEY:ssl_key"
-              "FRESH_SESSION_SECRET:fresh_session_secret"
-              "JENKINS_SECRET_KEY:jenkins_secret_key"
-              "KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET:keycloak_client_backend_server_secret"
-              "POSTGRESQL_PASSWORD:postgresql_password"
-              "POSTGRESQL_USERNAME:postgresql_username"
-              "SEAWEEDFS_S3_ACCESS_KEY:seaweedfs_s3_access_key"
-              "SEAWEEDFS_S3_SECRET_KEY:seaweedfs_s3_secret_key"
-              "STRIPE_PUBLISHABLE_KEY:stripe_publishable_key"
-              "STRIPE_SECRET_KEY:stripe_secret_key"
+            declare -A SECRETS=(
+              [SSL_CERT]=$SSL_CERT
+              [SSL_KEY]=$SSL_KEY
+              [FRESH_SESSION_SECRET]=$FRESH_SESSION_SECRET
+              [JENKINS_SECRET_KEY]=$JENKINS_SECRET_KEY
+              [KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET]=$KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET
+              [POSTGRESQL_PASSWORD]=$POSTGRESQL_PASSWORD
+              [POSTGRESQL_USERNAME]=$POSTGRESQL_USERNAME
+              [SEAWEEDFS_S3_ACCESS_KEY]=$SEAWEEDFS_S3_ACCESS_KEY
+              [SEAWEEDFS_S3_SECRET_KEY]=$SEAWEEDFS_S3_SECRET_KEY
+              [STRIPE_PUBLISHABLE_KEY]=$STRIPE_PUBLISHABLE_KEY
+              [STRIPE_SECRET_KEY]=$STRIPE_SECRET_KEY
             )
-            
-            RETRY_LIMIT=30
-            WAIT_TIME=2
-            
-            remove_secret() {
-              local secret_name=$1
-              echo "Removing secret: ${secret_name}"
-              sudo docker secret rm "${secret_name}" 2>/dev/null || true
-            }
-            
-            wait_for_secret_removal() {
-              local secret_name=$1
-              local retries=$RETRY_LIMIT
-              
-              while sudo docker secret ls --format '{{.Name}}' | grep -q "^${secret_name}$"; do
-                echo "Waiting for ${secret_name} to be removed..."
-                sleep $WAIT_TIME
-                retries=$((retries - 1))
-                
-                if [ $retries -le 0 ]; then
-                  echo "ERROR: Timeout waiting for ${secret_name} removal"
-                  exit 1
-                fi
-              done
-            }
-            
-            create_secret() {
-              local secret_name=$1
-              local secret_value=$2
-              
-              echo "Creating secret: ${secret_name}"
-              echo "${secret_value}" | sudo docker secret create "${secret_name}" -
-              echo "Secret created: ${secret_name}"
-            }
-            
-            get_secret_value() {
-              local env_name=$1
-              
-              case "${env_name}" in
-                SSL_CERT) echo "${SSL_CERT}" ;;
-                SSL_KEY) echo "${SSL_KEY}" ;;
-                FRESH_SESSION_SECRET) echo "${FRESH_SESSION_SECRET}" ;;
-                JENKINS_SECRET_KEY) echo "${JENKINS_SECRET_KEY}" ;;
-                KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET) echo "${KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET}" ;;
-                POSTGRESQL_PASSWORD) echo "${POSTGRESQL_PASSWORD}" ;;
-                POSTGRESQL_USERNAME) echo "${POSTGRESQL_USERNAME}" ;;
-                SEAWEEDFS_S3_ACCESS_KEY) echo "${SEAWEEDFS_S3_ACCESS_KEY}" ;;
-                SEAWEEDFS_S3_SECRET_KEY) echo "${SEAWEEDFS_S3_SECRET_KEY}" ;;
-                STRIPE_PUBLISHABLE_KEY) echo "${STRIPE_PUBLISHABLE_KEY}" ;;
-                STRIPE_SECRET_KEY) echo "${STRIPE_SECRET_KEY}" ;;
-              esac
-            }
-            
-            echo "==> Updating Docker Swarm secrets"
-            
-            for secret in "${SECRETS[@]}"; do
-              env_name="${secret%%:*}"
-              swarm_name="${secret##*:}"
-              
-              remove_secret "${swarm_name}"
-              wait_for_secret_removal "${swarm_name}"
-              
-              secret_value=$(get_secret_value "${env_name}")
-              create_secret "${swarm_name}" "${secret_value}"
+            for swarm_name in "${!SECRETS[@]}"; do
+              sudo docker secret rm "${swarm_name,,}" 2>/dev/null || true
+              echo "${SECRETS[$swarm_name]}" | sudo docker secret create "${swarm_name,,}" -
             done
-            
-            echo "==> All secrets updated successfully"
+            echo "✅ Secrets actualizados"
 
-  # Job 4: Redesplegar servicios
-  deploy-services:
+  # Job 4: Actualizar configs de Swarm
+  update-configs:
     runs-on: ubuntu-latest
     needs: update-secrets
+    steps:
+      - name: Apply Docker Swarm Configs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            echo "==> Aplicando configs de Docker Swarm..."
+            CONFIGS=(
+              "tls_conf:/home/ubuntu/FreshStack/traefik/dynamic/tls.yaml"
+              "s3_conf:/home/ubuntu/FreshStack/seaweedfs/s3.json.template"
+            )
+            for entry in "${CONFIGS[@]}"; do
+              IFS=":" read -r config_name file_path <<< "$entry"
+              if [ ! -f "$file_path" ]; then
+                echo "⚠️ No se encontró $file_path, omitiendo..."
+                continue
+              fi
+              if sudo docker config ls --format "{{.Name}}" | grep -q "^${config_name}$"; then
+                versioned_name="${config_name}_$(date +%Y%m%d_%H%M%S)"
+                sudo docker config create "$versioned_name" "$file_path"
+              else
+                sudo docker config create "$config_name" "$file_path"
+              fi
+            done
+            echo "✅ Configs aplicados"
+
+  # Job 5: Redesplegar servicios
+  deploy-services:
+    runs-on: ubuntu-latest
+    needs: update-configs
     steps:
       - name: Deploy Docker Swarm stacks
         uses: appleboy/ssh-action@v1.0.3
@@ -239,31 +166,15 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            
             STACKS=(
               "traefik:/home/ubuntu/FreshStack/traefik/docker-compose.yml"
               "postgresql:/home/ubuntu/FreshStack/postgresql/docker-compose.yml"
               "seaweedfs:/home/ubuntu/FreshStack/seaweedfs/docker-compose.yml"
             )
-            
-            deploy_stack() {
-              local stack_name=$1
-              local compose_file=$2
-              
-              echo "Deploying stack: ${stack_name}"
-              sudo docker stack deploy -c "${compose_file}" "${stack_name}"
-              echo "Stack deployed: ${stack_name}"
-            }
-            
-            echo "==> Deploying all stacks"
-            
             for stack in "${STACKS[@]}"; do
               stack_name="${stack%%:*}"
               compose_file="${stack##*:}"
-              
-              deploy_stack "${stack_name}" "${compose_file}"
+              sudo docker stack deploy -c "${compose_file}" "${stack_name}"
               sleep 2
             done
-            
-            echo "==> All stacks deployed successfully"
-            echo "Deployment completed: $(date)"
+            echo "✅ Servicios desplegados con éxito"

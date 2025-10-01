@@ -8,6 +8,8 @@ volumes:
 configs:
   settings_json:
     file: ./s3.json
+  s3_conf:  # Agrega esto
+    external: true
 
 networks:
   seaweedfs:
@@ -86,38 +88,24 @@ services:
   s3:
     image: chrislusf/seaweedfs
     entrypoint: ["/bin/sh", "-c"]
-    command: |
-      "envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json && \
+    command: |  # Modifica esto para leer secrets y aplicar envsubst
+      S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key) && \
+      S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key) && \
+      envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json && \
       exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8334 \
-        -config=/etc/seaweedfs/s3.json"
-    environment:
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
+        -config=/etc/seaweedfs/s3.json
     volumes:
-      - ./certs:/etc/seaweedfs/certs:ro
-      - ./s3.json.template:/etc/seaweedfs/s3.json.template:ro
+      - ./certs:/etc/seaweedfs/certs:ro  # Esto queda, pero si es multi-nodo, considera configs para archivos individuales en certs
+      # Elimina la línea: - ./s3.json.template:/etc/seaweedfs/s3.json.template:ro
+    configs:  # Agrega esta sección
+      - source: s3_conf
+        target: /etc/seaweedfs/s3.json.template
+        mode: 0444  # Opcional, para read-only
     secrets:
-      - s3_access_key
-      - s3_secret_key
-    depends_on:
-      - master
-      - volume
-      - filer
-    restart: unless-stopped
-    deploy:
-      replicas: 2
-      placement:
-        max_replicas_per_node: 1
-      labels:
-        - "traefik.enable=true"
-        - "traefik.docker.network=traefik-public"
-        - "traefik.http.routers.s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
-        - "traefik.http.routers.s3.entrypoints=websecure"
-        - "traefik.http.routers.s3.tls.certresolver=myresolver"
-        - "traefik.http.services.s3.loadbalancer.server.port=8334"
-    networks:
-      - seaweedfs
-      - traefik-public
+      - seaweedfs_s3_access_key
+      - seaweedfs_s3_secret_key
+    # Elimina las líneas de environment: S3_ACCESS_KEY y S3_SECRET_KEY
+    # El resto del servicio queda igual (depends_on, deploy, labels, networks)
 
   webdav:
     image: chrislusf/seaweedfs
