@@ -120,28 +120,28 @@ services:
         S3_USERNAME=$(cat /run/secrets/seaweedfs_s3_username)
         
         # Generar configuración manualmente (sin envsubst)
-        cat > /etc/seaweedfs/s3.json <<EOF
-{
-  "identities": [
-    {
-      "name": "${S3_USERNAME}",
-      "credentials": [
+        cat > /etc/seaweedfs/s3.json << 'ENDOFJSON'
         {
-          "accessKey": "${S3_ACCESS_KEY}",
-          "secretKey": "${S3_SECRET_KEY}"
+          "identities": [
+            {
+              "name": "${S3_USERNAME}",
+              "credentials": [
+                {
+                  "accessKey": "${S3_ACCESS_KEY}",
+                  "secretKey": "${S3_SECRET_KEY}"
+                }
+              ],
+              "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+              ]
+            }
+          ]
         }
-      ],
-      "actions": [
-        "Admin",
-        "Read",
-        "Write",
-        "List",
-        "Tagging"
-      ]
-    }
-  ]
-}
-EOF
+        ENDOFJSON
         
         echo "=== Configuración S3 generada ==="
         cat /etc/seaweedfs/s3.json
