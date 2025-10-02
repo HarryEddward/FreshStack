@@ -216,3 +216,4 @@ services:
     networks:
       - seaweedfs
       - traefik-public
+      
