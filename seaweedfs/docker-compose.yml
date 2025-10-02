@@ -117,11 +117,8 @@ services:
 
         echo "Leyendo secrets..."
         S3_ACCESS_KEY="$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
-        cat /run/secrets/seaweedfs_s3_access_key
         S3_SECRET_KEY="$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
-        cat /run/secrets/seaweedfs_s3_secret_key
         S3_USERNAME="$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
-        cat /run/secrets/seaweedfs_s3_username
 
         echo "Verificando valores de secrets..."
         [ -n "$$S3_USERNAME" ] || { echo "Error: S3_USERNAME está vacío"; exit 1; }
@@ -136,7 +133,10 @@ services:
         mkdir -p /etc/seaweedfs
 
         echo "Generando configuracion S3 a partir de s3.json.template..."
-        sed "s|$$SEAWEEDFS_S3_USERNAME|$$S3_USERNAME|g; s|$$SEAWEEDFS_S3_ACCESS_KEY|$$S3_ACCESS_KEY|g; s|$$SEAWEEDFS_S3_SECRET_KEY|$$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
+        sed "s|\$SEAWEEDFS_S3_USERNAME|$S3_USERNAME|g; \
+             s|\$SEAWEEDFS_S3_ACCESS_KEY|$S3_ACCESS_KEY|g; \
+             s|\$SEAWEEDFS_S3_SECRET_KEY|$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
+
 
         echo "=== Configuración S3 generada ==="
         # cat /etc/seaweedfs/s3.json  # Commented out to avoid logging sensitive data
