@@ -160,12 +160,9 @@ services:
       - source: s3_conf
         target: /etc/seaweedfs/s3.json.template
     depends_on:
-      master:
-        condition: service_started
-      volume:
-        condition: service_started
-      filer:
-        condition: service_healthy
+      - master
+      - volume
+      - filer
     deploy:
       mode: replicated
       replicas: 1
@@ -188,11 +185,6 @@ services:
         condition: on-failure
         delay: 10s
         max_attempts: 3
-      logging:
-        driver: "json-file"
-        options:
-          max-size: "10m"
-          max-file: "3"
     networks:
       - seaweedfs
       - traefik-public
