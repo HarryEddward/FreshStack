@@ -121,27 +121,27 @@ services:
         
         # Generar configuración manualmente (sin envsubst)
         cat > /etc/seaweedfs/s3.json <<EOF
+{
+  "identities": [
+    {
+      "name": "${S3_USERNAME}",
+      "credentials": [
         {
-          "identities": [
-            {
-              "name": "${S3_USERNAME}",
-              "credentials": [
-                {
-                  "accessKey": "${S3_ACCESS_KEY}",
-                  "secretKey": "${S3_SECRET_KEY}"
-                }
-              ],
-              "actions": [
-                "Admin",
-                "Read",
-                "Write",
-                "List",
-                "Tagging"
-              ]
-            }
-          ]
+          "accessKey": "${S3_ACCESS_KEY}",
+          "secretKey": "${S3_SECRET_KEY}"
         }
-        EOF
+      ],
+      "actions": [
+        "Admin",
+        "Read",
+        "Write",
+        "List",
+        "Tagging"
+      ]
+    }
+  ]
+}
+EOF
         
         echo "=== Configuración S3 generada ==="
         cat /etc/seaweedfs/s3.json
