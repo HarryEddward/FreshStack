@@ -162,12 +162,9 @@ services:
       - source: s3_conf
         target: /etc/seaweedfs/s3.json.template
     depends_on:
-      master:
-        condition: service_started
-      volume:
-        condition: service_started
-      filer:
-        condition: service_healthy
+      - master
+      - volume
+      - filer
     deploy:
       mode: replicated
       replicas: 1
