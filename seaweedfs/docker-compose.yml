@@ -104,20 +104,54 @@ services:
 
   s3:
     image: chrislusf/seaweedfs:latest
-    # --- LA CORRECCIÓN ESTÁ AQUÍ ---
-    entrypoint: sh
+    entrypoint: ["/bin/sh"]
     command:
       - -c
       - |
         set -e
-        echo "Exportando variables de entorno desde secrets..."
-        export SEAWEEDFS_S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r')
-        export SEAWEEDFS_S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r')
-        export SEAWEEDFS_S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r')
+        echo "Verificando secrets..."
+        test -f /run/secrets/seaweedfs_s3_access_key || { echo "Error: seaweedfs_s3_access_key no existe"; exit 1; }
+        test -f /run/secrets/seaweedfs_s3_secret_key || { echo "Error: seaweedfs_s3_secret_key no existe"; exit 1; }
+        test -f /run/secrets/seaweedfs_s3_username || { echo "Error: seaweedfs_s3_username no existe"; exit 1; }
+        test -f /etc/seaweedfs/s3.json.template || { echo "Error: s3.json.template no existe"; exit 1; }
 
-        echo "Iniciando gateway S3 de SeaweedFS..."
-        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json.template -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
-    # ---------------------------------
+        echo "Leyendo secrets..."
+        S3_ACCESS_KEY="$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
+        S3_SECRET_KEY="$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
+        S3_USERNAME="$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
+
+        echo "Verificando valores de secrets..."
+        [ -n "$S3_USERNAME" ] || { echo "Error: S3_USERNAME está vacío"; exit 1; }
+        [ -n "$S3_ACCESS_KEY" ] || { echo "Error: S3_ACCESS_KEY está vacío"; exit 1; }
+        [ -n "$S3_SECRET_KEY" ] || { echo "Error: S3_SECRET_KEY está vacío"; exit 1; }
+
+        echo "Username: $S3_USERNAME"
+        echo "AccessKey length: $(echo -n "$S3_ACCESS_KEY" | wc -c)"
+        echo "SecretKey length: $(echo -n "$S3_SECRET_KEY" | wc -c)"
+
+        echo "Creando directorio de configuración..."
+        mkdir -p /etc/seaweedfs
+
+        echo "Generando configuracion S3 a partir de s3.json.template..."
+        sed "s|\$\$SEAWEEDFS_S3_USERNAME|$S3_USERNAME|g; s|\$\$SEAWEEDFS_S3_ACCESS_KEY|$S3_ACCESS_KEY|g; s|\$\$SEAWEEDFS_S3_SECRET_KEY|$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
+
+        echo "=== Configuración S3 generada ==="
+        cat /etc/seaweedfs/s3.json
+        echo "================================="
+
+        echo "Verificando sintaxis JSON..."
+        echo "$(cat /etc/seaweedfs/s3.json)" | grep -q "{" || { echo "Error: Archivo JSON inválido"; exit 1; }
+
+        echo "Esperando filer..."
+        for i in {1..30}; do
+          nc -z filer 8888 && break
+          echo "Esperando filer, intento $i..."
+          sleep 1
+        done
+        [ $? -eq 0 ] || { echo "Error: No se pudo conectar al filer"; exit 1; }
+
+        echo "Iniciando S3..."
+        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
     secrets:
       - seaweedfs_s3_access_key
       - seaweedfs_s3_secret_key
@@ -139,7 +173,7 @@ services:
         - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
         - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
-        - "traefik.http.middlewares.seaweedfs-s3-strip.strippix.prefixes=/seaweedfs/s3"
+        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
