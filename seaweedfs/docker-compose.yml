@@ -12,9 +12,12 @@ volumes:
   seaweedfs_filer_data:
     driver: local
 
+
 configs:
   s3_conf:
     external: true
+
+
 
 secrets:
   seaweedfs_s3_access_key:
@@ -95,11 +98,6 @@ services:
         condition: on-failure
         delay: 10s
         max_attempts: 3
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8888"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
     networks:
       - seaweedfs
       - traefik-public
@@ -162,9 +160,12 @@ services:
       - source: s3_conf
         target: /etc/seaweedfs/s3.json.template
     depends_on:
-      - master
-      - volume
-      - filer
+      master:
+        condition: service_started
+      volume:
+        condition: service_started
+      filer:
+        condition: service_healthy
     deploy:
       mode: replicated
       replicas: 1
