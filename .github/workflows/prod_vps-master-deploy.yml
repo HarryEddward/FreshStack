@@ -134,6 +134,14 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
+            echo "==> Limpiando configs antiguas de s3_conf..."
+            for config in $(sudo docker config ls --format '{{.Name}}' | grep '^s3_conf_'); do
+              sudo docker config rm "$config" 2>/dev/null || true
+            done
+            echo "==> Limpiando configs antiguas de tls_conf..."
+            for config in $(sudo docker config ls --format '{{.Name}}' | grep '^tls_conf_'); do
+              sudo docker config rm "$config" 2>/dev/null || true
+            done
             echo "==> Aplicando configs de Docker Swarm..."
             CONFIGS=(
               "tls_conf:/home/ubuntu/FreshStack/traefik/dynamic/tls.yaml"
@@ -145,14 +153,10 @@ jobs:
                 echo "⚠️ No se encontró $file_path, omitiendo..."
                 continue
               fi
-              if sudo docker config ls --format "{{.Name}}" | grep -q "^${config_name}$"; then
-                versioned_name="${config_name}_$(date +%Y%m%d_%H%M%S)"
-                sudo docker config create "$versioned_name" "$file_path"
-              else
-                sudo docker config create "$config_name" "$file_path"
-              fi
+              sudo docker config rm "$config_name" 2>/dev/null || true
+              sudo docker config create "$config_name" "$file_path"
             done
-            echo "✅ Configs aplicados"
+            echo "✅ Configs actualizados"
 
   # Job 5: Redesplegar servicios
   deploy-services:
