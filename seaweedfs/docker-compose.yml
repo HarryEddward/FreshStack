@@ -12,12 +12,9 @@ volumes:
   seaweedfs_filer_data:
     driver: local
 
-
 configs:
   s3_conf:
     external: true
-
-
 
 secrets:
   seaweedfs_s3_access_key:
@@ -98,6 +95,11 @@ services:
         condition: on-failure
         delay: 10s
         max_attempts: 3
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8888"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
     networks:
       - seaweedfs
       - traefik-public
@@ -116,39 +118,39 @@ services:
         test -f /etc/seaweedfs/s3.json.template || { echo "Error: s3.json.template no existe"; exit 1; }
 
         echo "Leyendo secrets..."
-        S3_ACCESS_KEY="$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
-        S3_SECRET_KEY="$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
-        S3_USERNAME="$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
+        S3_ACCESS_KEY="$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
+        S3_SECRET_KEY="$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
+        S3_USERNAME="$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
 
         echo "Verificando valores de secrets..."
-        [ -n "$S3_USERNAME" ] || { echo "Error: S3_USERNAME está vacío"; exit 1; }
-        [ -n "$S3_ACCESS_KEY" ] || { echo "Error: S3_ACCESS_KEY está vacío"; exit 1; }
-        [ -n "$S3_SECRET_KEY" ] || { echo "Error: S3_SECRET_KEY está vacío"; exit 1; }
+        [ -n "$$S3_USERNAME" ] || { echo "Error: S3_USERNAME está vacío"; exit 1; }
+        [ -n "$$S3_ACCESS_KEY" ] || { echo "Error: S3_ACCESS_KEY está vacío"; exit 1; }
+        [ -n "$$S3_SECRET_KEY" ] || { echo "Error: S3_SECRET_KEY está vacío"; exit 1; }
 
-        echo "Username: $S3_USERNAME"
-        echo "AccessKey length: $(echo -n "$S3_ACCESS_KEY" | wc -c)"
-        echo "SecretKey length: $(echo -n "$S3_SECRET_KEY" | wc -c)"
+        echo "Username: $$S3_USERNAME"
+        echo "AccessKey length: $$(echo -n "$$S3_ACCESS_KEY" | wc -c)"
+        echo "SecretKey length: $$(echo -n "$$S3_SECRET_KEY" | wc -c)"
 
         echo "Creando directorio de configuración..."
         mkdir -p /etc/seaweedfs
 
         echo "Generando configuracion S3 a partir de s3.json.template..."
-        sed "s|\$\$SEAWEEDFS_S3_USERNAME|$S3_USERNAME|g; s|\$\$SEAWEEDFS_S3_ACCESS_KEY|$S3_ACCESS_KEY|g; s|\$\$SEAWEEDFS_S3_SECRET_KEY|$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
+        sed "s|$$SEAWEEDFS_S3_USERNAME|$$S3_USERNAME|g; s|$$SEAWEEDFS_S3_ACCESS_KEY|$$S3_ACCESS_KEY|g; s|$$SEAWEEDFS_S3_SECRET_KEY|$$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
 
         echo "=== Configuración S3 generada ==="
-        cat /etc/seaweedfs/s3.json
+        # cat /etc/seaweedfs/s3.json  # Commented out to avoid logging sensitive data
         echo "================================="
 
         echo "Verificando sintaxis JSON..."
-        echo "$(cat /etc/seaweedfs/s3.json)" | grep -q "{" || { echo "Error: Archivo JSON inválido"; exit 1; }
+        echo "$$(cat /etc/seaweedfs/s3.json)" | grep -q "{" || { echo "Error: Archivo JSON inválido"; exit 1; }
 
         echo "Esperando filer..."
         for i in {1..30}; do
           nc -z filer 8888 && break
-          echo "Esperando filer, intento $i..."
+          echo "Esperando filer, intento $$i..."
           sleep 1
         done
-        [ $? -eq 0 ] || { echo "Error: No se pudo conectar al filer"; exit 1; }
+        [ $$? -eq 0 ] || { echo "Error: No se pudo conectar al filer"; exit 1; }
 
         echo "Iniciando S3..."
         exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
@@ -160,9 +162,12 @@ services:
       - source: s3_conf
         target: /etc/seaweedfs/s3.json.template
     depends_on:
-      - master
-      - volume
-      - filer
+      master:
+        condition: service_started
+      volume:
+        condition: service_started
+      filer:
+        condition: service_healthy
     deploy:
       mode: replicated
       replicas: 1
@@ -185,6 +190,11 @@ services:
         condition: on-failure
         delay: 10s
         max_attempts: 3
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "3"
     networks:
       - seaweedfs
       - traefik-public
