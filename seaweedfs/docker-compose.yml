@@ -95,15 +95,31 @@ services:
       - seaweedfs
       - traefik-public
 
-    s3:
-      image: chrislusf/seaweedfs:latest
-      entrypoint: ["/bin/sh", "-c"]
-      command: |
-        set -e
+  s3:
+    image: chrislusf/seaweedfs:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Verificar que los archivos de secrets existen
+        if [ ! -f /run/secrets/seaweedfs_s3_access_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_access_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_secret_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_secret_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_username ]; then
+          echo "ERROR: Secret seaweedfs_s3_username no encontrado"
+          exit 1
+        fi
+        
+        # Leer secrets
         S3_ACCESS_KEY=$(cat /run/secrets/seaweedfs_s3_access_key)
         S3_SECRET_KEY=$(cat /run/secrets/seaweedfs_s3_secret_key)
         S3_USERNAME=$(cat /run/secrets/seaweedfs_s3_username)
-
+        
+        # Generar configuración manualmente (sin envsubst)
         cat > /etc/seaweedfs/s3.json <<EOF
         {
           "identities": [
@@ -115,12 +131,27 @@ services:
                   "secretKey": "${S3_SECRET_KEY}"
                 }
               ],
-              "actions": ["Admin","Read","Write","List","Tagging"]
+              "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+              ]
             }
           ]
         }
         EOF
-
+        
+        echo "=== Configuración S3 generada ==="
+        cat /etc/seaweedfs/s3.json
+        echo "================================="
+        
+        # Esperar a que filer esté disponible
+        echo "Esperando a que filer esté disponible..."
+        sleep 5
+        
+        # Iniciar servicio S3
         exec weed s3 \
           -filer=filer:8888 \
           -ip.bind=0.0.0.0 \
@@ -128,43 +159,43 @@ services:
           -config=/etc/seaweedfs/s3.json \
           -allowEmptyFolder=true \
           -allowDeleteBucketNotEmpty=false
-      secrets:
-        - seaweedfs_s3_access_key
-        - seaweedfs_s3_secret_key
-        - seaweedfs_s3_username
-      depends_on:
-        - master
-        - volume
-        - filer
-      deploy:
-        mode: replicated
-        replicas: 1
-        labels:
-          - "traefik.enable=true"
-          - "traefik.docker.network=traefik-public"
-          # S3 API en /seaweedfs/s3
-          - "traefik.http.routers.seaweedfs-s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
-          - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
-          - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
-          - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
-          # Middleware para strip prefix
-          - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
-          - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
-          # Headers para S3
-          - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
-          - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
-          - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Origin=*"
-          - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Methods=GET,POST,PUT,DELETE,HEAD,OPTIONS"
-          - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Headers=*"
-          # Aplicar middlewares
-          - "traefik.http.routers.seaweedfs-s3.middlewares=seaweedfs-s3-strip,seaweedfs-s3-headers"
-        restart_policy:
-          condition: on-failure
-          delay: 10s
-          max_attempts: 3
-      networks:
-        - seaweedfs
-        - traefik-public
+    secrets:
+      - seaweedfs_s3_access_key
+      - seaweedfs_s3_secret_key
+      - seaweedfs_s3_username
+    depends_on:
+      - master
+      - volume
+      - filer
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        # S3 API en /seaweedfs/s3
+        - "traefik.http.routers.seaweedfs-s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
+        - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
+        - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
+        - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
+        # Middleware para strip prefix
+        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
+        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
+        # Headers para S3
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Origin=*"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Methods=GET,POST,PUT,DELETE,HEAD,OPTIONS"
+        - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Headers=*"
+        # Aplicar middlewares
+        - "traefik.http.routers.seaweedfs-s3.middlewares=seaweedfs-s3-strip,seaweedfs-s3-headers"
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+    networks:
+      - seaweedfs
+      - traefik-public
 
   webdav:
     image: chrislusf/seaweedfs:latest
