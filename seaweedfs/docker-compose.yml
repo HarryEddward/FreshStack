@@ -104,20 +104,27 @@ services:
 
   s3:
     image: chrislusf/seaweedfs:latest
-    command: >
-      sh -c "
-      export SEAWEEDFS_S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r') &&
-      export SEAWEEDFS_S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r') &&
-      export SEAWEEDFS_S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r') &&
-      exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json.template -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
-      "
+    # --- LA CORRECCIÓN ESTÁ AQUÍ ---
+    entrypoint: sh
+    command:
+      - -c
+      - |
+        set -e
+        echo "Exportando variables de entorno desde secrets..."
+        export SEAWEEDFS_S3_USERNAME=$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r')
+        export SEAWEEDFS_S3_ACCESS_KEY=$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r')
+        export SEAWEEDFS_S3_SECRET_KEY=$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r')
+
+        echo "Iniciando gateway S3 de SeaweedFS..."
+        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json.template -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
+    # ---------------------------------
     secrets:
       - seaweedfs_s3_access_key
       - seaweedfs_s3_secret_key
       - seaweedfs_s3_username
     configs:
       - source: s3_conf
-        target: /etc/seaweedfs/s3.json.template # El target es el archivo template
+        target: /etc/seaweedfs/s3.json.template
     depends_on:
       - master
       - volume
@@ -132,7 +139,7 @@ services:
         - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
         - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
-        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
+        - "traefik.http.middlewares.seaweedfs-s3-strip.strippix.prefixes=/seaweedfs/s3"
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
