@@ -109,6 +109,7 @@ services:
         
         echo "Leyendo secrets..."
         read -r S3_ACCESS_KEY < /run/secrets/seaweedfs_s3_access_key
+        cat /run/secrets/seaweedfs_s3_access_key
         read -r S3_SECRET_KEY < /run/secrets/seaweedfs_s3_secret_key
         read -r S3_USERNAME < /run/secrets/seaweedfs_s3_username
         
