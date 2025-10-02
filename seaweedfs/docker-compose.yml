@@ -97,59 +97,68 @@ services:
 
   s3:
     image: chrislusf/seaweedfs:latest
-    entrypoint: ["/bin/sh"]
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - -c
       - |
-        set -e
-        echo "Verificando secrets..."
-        test -f /run/secrets/seaweedfs_s3_access_key || exit 1
-        test -f /run/secrets/seaweedfs_s3_secret_key || exit 1
-        test -f /run/secrets/seaweedfs_s3_username || exit 1
+        # Verificar que los archivos de secrets existen
+        if [ ! -f /run/secrets/seaweedfs_s3_access_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_access_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_secret_key ]; then
+          echo "ERROR: Secret seaweedfs_s3_secret_key no encontrado"
+          exit 1
+        fi
+        if [ ! -f /run/secrets/seaweedfs_s3_username ]; then
+          echo "ERROR: Secret seaweedfs_s3_username no encontrado"
+          exit 1
+        fi
         
-        echo "Leyendo secrets..."
-        read -r S3_ACCESS_KEY < /run/secrets/seaweedfs_s3_access_key
-        cat /run/secrets/seaweedfs_s3_access_key
-        read -r S3_SECRET_KEY < /run/secrets/seaweedfs_s3_secret_key
-        read -r S3_USERNAME < /run/secrets/seaweedfs_s3_username
+        # Leer secrets
+        S3_ACCESS_KEY=$(cat /run/secrets/seaweedfs_s3_access_key)
+        S3_SECRET_KEY=$(cat /run/secrets/seaweedfs_s3_secret_key)
+        S3_USERNAME=$(cat /run/secrets/seaweedfs_s3_username)
         
-        echo "Generando configuracion S3..."
-        cat > /etc/seaweedfs/s3.json << 'ENDOFJSON'
+        # Generar configuración manualmente (sin envsubst)
+        cat > /etc/seaweedfs/s3.json <<EOF
+{
+  "identities": [
+    {
+      "name": "${S3_USERNAME}",
+      "credentials": [
         {
-          "identities": [
-            {
-              "name": "PLACEHOLDER_USERNAME",
-              "credentials": [
-                {
-                  "accessKey": "PLACEHOLDER_ACCESS_KEY",
-                  "secretKey": "PLACEHOLDER_SECRET_KEY"
-                }
-              ],
-              "actions": [
-                "Admin",
-                "Read",
-                "Write",
-                "List",
-                "Tagging"
-              ]
-            }
-          ]
+          "accessKey": "${S3_ACCESS_KEY}",
+          "secretKey": "${S3_SECRET_KEY}"
         }
-        ENDOFJSON
+      ],
+      "actions": [
+        "Admin",
+        "Read",
+        "Write",
+        "List",
+        "Tagging"
+      ]
+    }
+  ]
+}
+EOF
         
-        sed -i "s/PLACEHOLDER_USERNAME/$S3_USERNAME/g" /etc/seaweedfs/s3.json
-        sed -i "s/PLACEHOLDER_ACCESS_KEY/$S3_ACCESS_KEY/g" /etc/seaweedfs/s3.json
-        sed -i "s/PLACEHOLDER_SECRET_KEY/$S3_SECRET_KEY/g" /etc/seaweedfs/s3.json
-        
-        echo "=== Configuracion S3 generada ==="
+        echo "=== Configuración S3 generada ==="
         cat /etc/seaweedfs/s3.json
         echo "================================="
         
-        echo "Esperando filer..."
+        # Esperar a que filer esté disponible
+        echo "Esperando a que filer esté disponible..."
         sleep 5
         
-        echo "Iniciando S3..."
-        exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
+        # Iniciar servicio S3
+        exec weed s3 \
+          -filer=filer:8888 \
+          -ip.bind=0.0.0.0 \
+          -port=8333 \
+          -config=/etc/seaweedfs/s3.json \
+          -allowEmptyFolder=true \
+          -allowDeleteBucketNotEmpty=false
     secrets:
       - seaweedfs_s3_access_key
       - seaweedfs_s3_secret_key
