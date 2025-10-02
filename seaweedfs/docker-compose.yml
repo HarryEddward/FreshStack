@@ -110,61 +110,49 @@ services:
       - |
         set -e
         echo "Verificando secrets..."
-        test -f /run/secrets/seaweedfs_s3_access_key || { echo "Error: seaweedfs_s3_access_key no existe"; exit 1; }
-        test -f /run/secrets/seaweedfs_s3_secret_key || { echo "Error: seaweedfs_s3_secret_key no existe"; exit 1; }
-        test -f /run/secrets/seaweedfs_s3_username || { echo "Error: seaweedfs_s3_username no existe"; exit 1; }
-        test -f /etc/seaweedfs/s3.json.template || { echo "Error: s3.json.template no existe"; exit 1; }
-
-        echo "Leyendo secrets..."
-        S3_USERNAME=$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')
-        S3_ACCESS_KEY=$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')
-        S3_SECRET_KEY=$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')
-
-        echo "Verificando valores de secrets..."
-        [ -n "$S3_USERNAME" ] || { echo "Error: S3_USERNAME está vacío"; exit 1; }
-        [ -n "$S3_ACCESS_KEY" ] || { echo "Error: S3_ACCESS_KEY está vacío"; exit 1; }
-        [ -n "$S3_SECRET_KEY" ] || { echo "Error: S3_SECRET_KEY está vacío"; exit 1; }
-
-        echo "Username: $S3_USERNAME"
-        echo "AccessKey length: $(echo -n "$S3_ACCESS_KEY" | wc -c)"
-        echo "SecretKey length: $(echo -n "$S3_SECRET_KEY" | wc -c)"
-
-        echo "Creando directorio de configuración..."
-        mkdir -p /etc/seaweedfs
-
-        echo "Generando configuracion S3 a partir de s3.json.template..."
-        # Hacer reemplazos uno por uno para evitar problemas
-        cp /etc/seaweedfs/s3.json.template /etc/seaweedfs/s3.json
-        sed -i "s|__SEAWEEDFS_S3_USERNAME__|$S3_USERNAME|g" /etc/seaweedfs/s3.json
-        sed -i "s|__SEAWEEDFS_S3_ACCESS_KEY__|$S3_ACCESS_KEY|g" /etc/seaweedfs/s3.json  
-        sed -i "s|__SEAWEEDFS_S3_SECRET_KEY__|$S3_SECRET_KEY|g" /etc/seaweedfs/s3.json
-
-        echo "=== Configuración S3 generada ==="
+        test -f /run/secrets/seaweedfs_s3_access_key || exit 1
+        test -f /run/secrets/seaweedfs_s3_secret_key || exit 1
+        test -f /run/secrets/seaweedfs_s3_username || exit 1
+        
+        echo "Leyendo secrets con cat..."
+        S3_ACCESS_KEY="$$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r')"
+        S3_SECRET_KEY="$$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r')"
+        S3_USERNAME="$$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r')"
+        
+        echo "Username: $$S3_USERNAME"
+        echo "AccessKey length: $$(echo "$$S3_ACCESS_KEY" | wc -c)"
+        
+        echo "Generando configuracion S3..."
+        cat > /etc/seaweedfs/s3.json <<ENDOFJSON
+        {
+          "identities": [
+            {
+              "name": "$$S3_USERNAME",
+              "credentials": [
+                {
+                  "accessKey": "$$S3_ACCESS_KEY",
+                  "secretKey": "$$S3_SECRET_KEY"
+                }
+              ],
+              "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+              ]
+            }
+          ]
+        }
+        ENDOFJSON
+        
+        echo "=== Configuracion S3 generada ==="
         cat /etc/seaweedfs/s3.json
         echo "================================="
-
-        echo "Verificando sintaxis JSON..."
-        # Verificar si python3 está disponible, sino usar jq o python
-        if command -v python3 &> /dev/null; then
-            python3 -m json.tool < /etc/seaweedfs/s3.json > /dev/null || { echo "Error: JSON inválido"; cat /etc/seaweedfs/s3.json; exit 1; }
-        elif command -v python &> /dev/null; then
-            python -m json.tool < /etc/seaweedfs/s3.json > /dev/null || { echo "Error: JSON inválido"; cat /etc/seaweedfs/s3.json; exit 1; }
-        else
-            # Si no hay python, verificar manualmente que tenga estructura JSON básica
-            if ! grep -q '"identities"' /etc/seaweedfs/s3.json || ! grep -q '{' /etc/seaweedfs/s3.json; then
-                echo "Error: Estructura JSON inválida"
-                exit 1
-            fi
-        fi
-
+        
         echo "Esperando filer..."
-        for i in {1..30}; do
-          nc -z filer 8888 && break
-          echo "Esperando filer, intento $i..."
-          sleep 1
-        done
-        [ $? -eq 0 ] || { echo "Error: No se pudo conectar al filer"; exit 1; }
-
+        sleep 5
+        
         echo "Iniciando S3..."
         exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json -allowEmptyFolder=true -allowDeleteBucketNotEmpty=false
     secrets:
@@ -184,17 +172,21 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=traefik-public"
+        # S3 API en /seaweedfs/s3
         - "traefik.http.routers.seaweedfs-s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
         - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
         - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
+        # Middleware para strip prefix
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
+        # Headers para S3
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Origin=*"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Methods=GET,POST,PUT,DELETE,HEAD,OPTIONS"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customresponseheaders.Access-Control-Allow-Headers=*"
+        # Aplicar middlewares
         - "traefik.http.routers.seaweedfs-s3.middlewares=seaweedfs-s3-strip,seaweedfs-s3-headers"
       restart_policy:
         condition: on-failure
