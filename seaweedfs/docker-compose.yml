@@ -109,40 +109,45 @@ services:
       - -c
       - |
         set -e
-        apk add --no-cache jq
-
+        apk add --no-cache gettext
+        
         echo "Leyendo secrets..."
-        S3_ACCESS_KEY="$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
-        S3_SECRET_KEY="$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
-        S3_USERNAME="$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
-
-        echo "Generando JSON seguro con jq..."
-        jq -n \
-          --arg user "$S3_USERNAME" \
-          --arg ak "$S3_ACCESS_KEY" \
-          --arg sk "$S3_SECRET_KEY" \
-          '{
-            "identities": [
-              {
-                "name": "anonymous",
-                "actions": ["Read"]
-              },
-              {
-                "name": $user,
-                "credentials": [
-                  {
-                    "accessKey": $ak,
-                    "secretKey": $sk
-                  }
-                ],
-                "actions": ["Admin","Read","List","Tagging","Write"]
-              }
-            ]
-          }' > /etc/seaweedfs/s3.json
-
+        export S3_ACCESS_KEY="$(cat /run/secrets/seaweedfs_s3_access_key | tr -d '\n\r\t ')"
+        export S3_SECRET_KEY="$(cat /run/secrets/seaweedfs_s3_secret_key | tr -d '\n\r\t ')"
+        export S3_USERNAME="$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
+        
+        echo "Variables cargadas:"
+        echo "S3_USERNAME: $S3_USERNAME"
+        echo "S3_ACCESS_KEY: ${S3_ACCESS_KEY:0:5}..."
+        echo "S3_SECRET_KEY: ${S3_SECRET_KEY:0:5}..."
+        
+        cat > /tmp/s3_template.json << 'EOF'
+        {
+          "identities": [
+            {
+              "name": "anonymous",
+              "actions": ["Read"]
+            },
+            {
+              "name": "${S3_USERNAME}",
+              "credentials": [
+                {
+                  "accessKey": "${S3_ACCESS_KEY}",
+                  "secretKey": "${S3_SECRET_KEY}"
+                }
+              ],
+              "actions": ["Admin","Read","List","Tagging","Write"]
+            }
+          ]
+        }
+        EOF
+        
+        echo "Generando configuración S3..."
+        envsubst < /tmp/s3_template.json > /etc/seaweedfs/s3.json
+        
         echo "JSON generado:"
-        cat /etc/seaweedfs/s3.json | jq .
-
+        cat /etc/seaweedfs/s3.json
+        
         exec weed s3 -filer=filer:8888 -ip.bind=0.0.0.0 -port=8333 -config=/etc/seaweedfs/s3.json
     secrets:
       - seaweedfs_s3_access_key
