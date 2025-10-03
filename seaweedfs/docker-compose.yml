@@ -109,7 +109,7 @@ services:
       - -c
       - |
         set -e
-        apk add --no-cache gettext ncutils  # gettext para envsubst si lo necesitas después, ncutils para nc
+        apk add --no-cache ncutils
         
         echo "Verificando secrets..."
         test -f /run/secrets/seaweedfs_s3_access_key || { echo "Error: seaweedfs_s3_access_key no existe"; exit 1; }
@@ -128,13 +128,13 @@ services:
         
         echo "Variables cargadas:"
         echo "S3_USERNAME: $$S3_USERNAME"
-        echo "S3_ACCESS_KEY: $${S3_ACCESS_KEY:0:5}..."
-        echo "S3_SECRET_KEY: $${S3_SECRET_KEY:0:5}..."
+        echo "S3_ACCESS_KEY length: $$(echo -n "$$S3_ACCESS_KEY" | wc -c)"
+        echo "S3_SECRET_KEY length: $$(echo -n "$$S3_SECRET_KEY" | wc -c)"
         
-        # Escape chars especiales para JSON (comillas, backslashes)
-        S3_USERNAME_JSON="$$(echo "$$S3_USERNAME" | sed 's/[\"\\\\]/\\\\&/g')"
-        S3_ACCESS_KEY_JSON="$$(echo "$$S3_ACCESS_KEY" | sed 's/[\"\\\\]/\\\\&/g')"
-        S3_SECRET_KEY_JSON="$$(echo "$$S3_SECRET_KEY" | sed 's/[\"\\\\]/\\\\&/g')"
+        # Escape para JSON: " -> \" y \ -> \\
+        S3_USERNAME_JSON="$$(echo "$$S3_USERNAME" | sed 's/"/\\"/g' | sed 's/\\/\\\\/g')"
+        S3_ACCESS_KEY_JSON="$$(echo "$$S3_ACCESS_KEY" | sed 's/"/\\"/g' | sed 's/\\/\\\\/g')"
+        S3_SECRET_KEY_JSON="$$(echo "$$S3_SECRET_KEY" | sed 's/"/\\"/g' | sed 's/\\/\\\\/g')"
         
         cat > /tmp/s3_template.json << EOF
         {
@@ -158,7 +158,8 @@ services:
         EOF
         
         echo "Generando configuración S3..."
-        cp /tmp/s3_template.json /etc/seaweedfs/s3.json  # Directo, sin envsubst ya que usamos vars escapadas
+        mkdir -p /etc/seaweedfs
+        cp /tmp/s3_template.json /etc/seaweedfs/s3.json
         
         echo "JSON generado:"
         cat /etc/seaweedfs/s3.json
