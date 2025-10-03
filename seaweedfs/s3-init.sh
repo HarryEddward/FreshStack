@@ -26,7 +26,7 @@ echo "S3_SECRET_KEY length: $(echo -n "$S3_SECRET_KEY" | wc -c)"
 
 echo "Generando configuración S3 con envsubst..."
 mkdir -p /etc/seaweedfs
-envsubst < /tmp/s3.json.template > /etc/seaweedfs/s3.json
+envsubst < /etc/seaweedfs/s3.json.template > /etc/seaweedfs/s3.json
 cat /etc/seaweedfs/s3.json
 
 echo "Verificando sintaxis JSON básica..."
