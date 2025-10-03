@@ -106,7 +106,7 @@ services:
     image: chrislusf/seaweedfs:latest
     entrypoint: ["/bin/sh"]
     command:
-      - c
+      - -c
       - |
         set -e
         apk add --no-cache ncurses
