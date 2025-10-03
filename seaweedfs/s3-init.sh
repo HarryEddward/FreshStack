@@ -23,31 +23,10 @@ echo "S3_USERNAME: $S3_USERNAME"
 echo "S3_ACCESS_KEY length: $(echo -n "$S3_ACCESS_KEY" | wc -c)"
 echo "S3_SECRET_KEY length: $(echo -n "$S3_SECRET_KEY" | wc -c)"
 
-# Crear template con placeholders
-cat > /tmp/s3_template.json << 'EOF'
-{
-  "identities": [
-    {
-      "name": "anonymous",
-      "actions": ["Read"]
-    },
-    {
-      "name": "${S3_USERNAME}",
-      "credentials": [
-        {
-          "access_key": "${S3_ACCESS_KEY}",
-          "secret_key": "${S3_SECRET_KEY}"
-        }
-      ],
-      "actions": ["Admin","Read","List","Tagging","Write"]
-    }
-  ]
-}
-EOF
 
 echo "Generando configuración S3 con envsubst..."
 mkdir -p /etc/seaweedfs
-envsubst < /tmp/s3_template.json > /etc/seaweedfs/s3.json
+envsubst < /tmp/s3.json.template > /etc/seaweedfs/s3.json
 cat /etc/seaweedfs/s3.json
 
 echo "Verificando sintaxis JSON básica..."
