@@ -117,28 +117,28 @@ services:
         S3_USERNAME="$(cat /run/secrets/seaweedfs_s3_username | tr -d '\n\r\t ')"
 
         echo "Generando JSON seguro con jq..."
-        cat <<EOF | jq --arg user "$S3_USERNAME" --arg ak "$S3_ACCESS_KEY" --arg sk "$S3_SECRET_KEY" \
-          '.identities[1].name=$user | .identities[1].credentials[0].accessKey=$ak | .identities[1].credentials[0].secretKey=$sk' \
-          > /etc/seaweedfs/s3.json
-            {
-              "identities": [
-                {
-                  "name": "anonymous",
-                  "actions": ["Read"]
-                },
-                {
-                  "name": "",
-                  "credentials": [
-                    {
-                      "accessKey": "",
-                      "secretKey": ""
-                    }
-                  ],
-                  "actions": ["Admin","Read","List","Tagging","Write"]
-                }
-              ]
-            }
-        EOF
+        jq -n \
+          --arg user "$S3_USERNAME" \
+          --arg ak "$S3_ACCESS_KEY" \
+          --arg sk "$S3_SECRET_KEY" \
+          '{
+            "identities": [
+              {
+                "name": "anonymous",
+                "actions": ["Read"]
+              },
+              {
+                "name": $user,
+                "credentials": [
+                  {
+                    "accessKey": $ak,
+                    "secretKey": $sk
+                  }
+                ],
+                "actions": ["Admin","Read","List","Tagging","Write"]
+              }
+            ]
+          }' > /etc/seaweedfs/s3.json
 
         echo "JSON generado:"
         cat /etc/seaweedfs/s3.json | jq .
