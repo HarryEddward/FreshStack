@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     steps:
       - name: Pull Docker Images on VPS
@@ -40,6 +40,8 @@ jobs:
               "bitnami/pgbouncer:latest"
               "bitnami/postgresql-repmgr:16"
               "denoland/deno:alpine"
+              "bitnami/redis:latest"
+              "bitnami/redis-sentinel:latest"
             )
 
             for IMAGE in "${IMAGES[@]}"; do

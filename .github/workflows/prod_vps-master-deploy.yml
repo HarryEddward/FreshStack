@@ -12,6 +12,7 @@ env:
 jobs:
   # Job 1: Actualizar repositorio en el VPS
   sync-repository:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,6 +51,7 @@ jobs:
 
   # Job 2: Remover stacks existentes
   remove-stacks:
+    if: false
     runs-on: ubuntu-latest
     needs: sync-repository
     steps:
@@ -74,6 +76,7 @@ jobs:
 
   # Job 3: Actualizar secretos
   update-secrets:
+    if: false
     runs-on: ubuntu-latest
     needs: remove-stacks
     steps:
@@ -122,6 +125,7 @@ jobs:
 
   # Job 4: Actualizar configs de Swarm
   update-configs:
+    if: false
     runs-on: ubuntu-latest
     needs: update-secrets
     steps:
@@ -160,6 +164,7 @@ jobs:
 
   # Job 5: Redesplegar servicios
   deploy-services:
+    if: false
     runs-on: ubuntu-latest
     needs: update-configs
     steps:
