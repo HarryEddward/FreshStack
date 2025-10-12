@@ -3,297 +3,96 @@ secrets:
     external: true
 
 networks:
-  hairdresser_network:
-    external: true
-  traefik-net:
+  traefik-public:
     external: true
 
 volumes:
-  redis_node_1_data:
+  redis_master_data:
     driver: local
-  redis_node_2_data:
+  redis_replica_data:
     driver: local
-  redis_node_3_data:
-    driver: local
-  redis_node_4_data:
-    driver: local
-  redis_node_5_data:
-    driver: local
-  redis_node_6_data:
-    driver: local
-  redis_sentinel_1_data:
-    driver: local
-  redis_sentinel_2_data:
-    driver: local
-  redis_sentinel_3_data:
+  redis_sentinel_data:
     driver: local
 
 services:
-  # Redis Cluster Nodes (3 masters + 3 replicas)
-  redis-node-1:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-1
-    hostname: redis-node-1
+  # Redis Master
+  redis-master:
+    image: bitnami/redis:latest
+    container_name: redis-master
+    hostname: redis-master
     environment:
+      - REDIS_REPLICATION_MODE=master
       - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_CLUSTER_CREATOR=yes
-      - REDIS_CLUSTER_REPLICAS=1
-      - REDIS_PORT_NUMBER=7000
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-1
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7000
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17000
+      - REDIS_PORT_NUMBER=6379
     volumes:
-      - redis_node_1_data:/bitnami/redis/data
+      - redis_master_data:/bitnami/redis/data
     ports:
-      - "7000:7000"
-      - "17000:17000"
+      - "6379:6379"
     networks:
       - traefik-public
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7000", "ping"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "ping"]
+      interval: 10s
+      timeout: 3s
       retries: 3
-      start_period: 30s
+      start_period: 10s
     deploy:
       restart_policy:
         condition: any
 
-  redis-node-2:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-2
-    hostname: redis-node-2
+  # Redis Replica (Slave)
+  redis-replica:
+    image: bitnami/redis:latest
+    container_name: redis-replica
+    hostname: redis-replica
     environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=SECRETPWS
       - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_PORT_NUMBER=7001
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-2
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7001
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17001
+      - REDIS_PORT_NUMBER=6379
     volumes:
-      - redis_node_2_data:/bitnami/redis/data
+      - redis_replica_data:/bitnami/redis/data
     ports:
-      - "7001:7001"
-      - "17001:17001"
+      - "6380:6379"
     networks:
       - traefik-public
     depends_on:
-      - redis-node-1
+      - redis-master
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7001", "ping"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "ping"]
+      interval: 10s
+      timeout: 3s
       retries: 3
-      start_period: 30s
+      start_period: 15s
     deploy:
       restart_policy:
         condition: any
 
-  redis-node-3:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-3
-    hostname: redis-node-3
-    environment:
-      - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_PORT_NUMBER=7002
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-3
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7002
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17002
-    volumes:
-      - redis_node_3_data:/bitnami/redis/data
-    ports:
-      - "7002:7002"
-      - "17002:17002"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7002", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      restart_policy:
-        condition: any
-
-  redis-node-4:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-4
-    hostname: redis-node-4
-    environment:
-      - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_PORT_NUMBER=7003
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-4
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7003
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17003
-    volumes:
-      - redis_node_4_data:/bitnami/redis/data
-    ports:
-      - "7003:7003"
-      - "17003:17003"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7003", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      restart_policy:
-        condition: any
-
-  redis-node-5:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-5
-    hostname: redis-node-5
-    environment:
-      - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_PORT_NUMBER=7004
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-5
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7004
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17004
-    volumes:
-      - redis_node_5_data:/bitnami/redis/data
-    ports:
-      - "7004:7004"
-      - "17004:17004"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7004", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      restart_policy:
-        condition: any
-
-  redis-node-6:
-    image: bitnami/redis-cluster:latest
-    container_name: redis-node-6
-    hostname: redis-node-6
-    environment:
-      - REDIS_PASSWORD=SECRETPWS
-      - REDIS_NODES=redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5 redis-node-6
-      - REDIS_PORT_NUMBER=7005
-      - REDIS_CLUSTER_DYNAMIC_IPS=no
-      - REDIS_CLUSTER_ANNOUNCE_IP=redis-node-6
-      - REDIS_CLUSTER_ANNOUNCE_PORT=7005
-      - REDIS_CLUSTER_ANNOUNCE_BUS_PORT=17005
-    volumes:
-      - redis_node_6_data:/bitnami/redis/data
-    ports:
-      - "7005:7005"
-      - "17005:17005"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "-p", "7005", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      restart_policy:
-        condition: any
-
-  # Redis Sentinel para monitoreo adicional
-  redis-sentinel-1:
+  # Redis Sentinel (un solo nodo es suficiente para monitoreo)
+  redis-sentinel:
     image: bitnami/redis-sentinel:latest
-    container_name: redis-sentinel-1
-    hostname: redis-sentinel-1
+    container_name: redis-sentinel
+    hostname: redis-sentinel
     environment:
-      - REDIS_MASTER_HOST=redis-node-1
-      - REDIS_MASTER_PORT_NUMBER=7000
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
       - REDIS_MASTER_PASSWORD=SECRETPWS
       - REDIS_SENTINEL_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_QUORUM=1
       - REDIS_SENTINEL_DOWN_AFTER=5000
-      - REDIS_SENTINEL_FAILOVER_TIMEOUT=60000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
       - REDIS_SENTINEL_PORT_NUMBER=26379
     volumes:
-      - redis_sentinel_1_data:/bitnami/redis-sentinel
+      - redis_sentinel_data:/bitnami/redis-sentinel
     ports:
       - "26379:26379"
     networks:
       - traefik-public
     depends_on:
-      - redis-node-1
-      - redis-node-2
-      - redis-node-3
-    deploy:
-      restart_policy:
-        condition: any
-
-  redis-sentinel-2:
-    image: bitnami/redis-sentinel:latest
-    container_name: redis-sentinel-2
-    hostname: redis-sentinel-2
-    environment:
-      - REDIS_MASTER_HOST=redis-node-1
-      - REDIS_MASTER_PORT_NUMBER=7000
-      - REDIS_MASTER_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_QUORUM=2
-      - REDIS_SENTINEL_DOWN_AFTER=5000
-      - REDIS_SENTINEL_FAILOVER_TIMEOUT=60000
-      - REDIS_SENTINEL_PORT_NUMBER=26380
-    volumes:
-      - redis_sentinel_2_data:/bitnami/redis-sentinel
-    ports:
-      - "26380:26380"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-      - redis-node-2
-      - redis-node-3
-    deploy:
-      restart_policy:
-        condition: any 
-
-  redis-sentinel-3:
-    image: bitnami/redis-sentinel:latest
-    container_name: redis-sentinel-3
-    hostname: redis-sentinel-3
-    environment:
-      - REDIS_MASTER_HOST=redis-node-1
-      - REDIS_MASTER_PORT_NUMBER=7000
-      - REDIS_MASTER_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_QUORUM=2
-      - REDIS_SENTINEL_DOWN_AFTER=5000
-      - REDIS_SENTINEL_FAILOVER_TIMEOUT=60000
-      - REDIS_SENTINEL_PORT_NUMBER=26381
-    volumes:
-      - redis_sentinel_3_data:/bitnami/redis-sentinel
-    ports:
-      - "26381:26381"
-    networks:
-      - traefik-public
-    depends_on:
-      - redis-node-1
-      - redis-node-2
-      - redis-node-3
+      - redis-master
+      - redis-replica
     deploy:
       restart_policy:
         condition: any
