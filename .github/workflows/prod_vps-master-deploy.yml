@@ -166,7 +166,7 @@ jobs:
   build-images:
     if: true
     runs-on: ubuntu-latest
-    needs: update-configs
+    needs: remove-stacks
     steps:
       - name: Build Docker images
         uses: appleboy/ssh-action@v1.0.3
