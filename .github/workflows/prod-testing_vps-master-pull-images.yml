@@ -42,6 +42,7 @@ jobs:
               "denoland/deno:alpine"
               "bitnami/redis:latest"
               "bitnami/redis-sentinel:latest"
+              "nginx:alpine"
             )
 
             for IMAGE in "${IMAGES[@]}"; do

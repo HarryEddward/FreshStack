@@ -64,7 +64,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            STACKS=("traefik" "postgresql" "seaweedfs" "redis")
+            STACKS=("traefik" "postgresql" "seaweedfs" "redis" "prelaunch")
             for stack_name in "${STACKS[@]}"; do
               echo "Removing stack: ${stack_name}"
               sudo docker stack rm "${stack_name}" 2>/dev/null || true
@@ -182,6 +182,7 @@ jobs:
               "postgresql:/home/ubuntu/FreshStack/postgresql/docker-compose.yml"
               "seaweedfs:/home/ubuntu/FreshStack/seaweedfs/docker-compose.yml"
               "redis:/home/ubuntu/FreshStack/redis/docker-compose.yml"
+              "prelaunch:/home/ubuntu/FreshStack/prelaunch/docker-compose.yml"
             )
             for stack in "${STACKS[@]}"; do
               stack_name="${stack%%:*}"
