@@ -123,7 +123,7 @@ jobs:
             done
             echo "✅ Secrets actualizados"
 
-  # Job 4.5: Construir imagen Docker (NUEVO - Añadir después de update-configs)
+  # Job 4.5: Construir imagen Docker
   build-images:
     if: true
     runs-on: ubuntu-latest
