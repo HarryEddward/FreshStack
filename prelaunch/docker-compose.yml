@@ -5,9 +5,7 @@ networks:
 
 services:
   prelaunch:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: cafebuy-prelaunch:latest
     ports:
       - "80:80"
     deploy:
