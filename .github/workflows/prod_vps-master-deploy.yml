@@ -12,7 +12,7 @@ env:
 jobs:
   # Job 1: Actualizar repositorio en el VPS
   sync-repository:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -51,7 +51,7 @@ jobs:
 
   # Job 2: Remover stacks existentes
   remove-stacks:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: sync-repository
     steps:
@@ -64,7 +64,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            STACKS=("traefik" "postgresql" "seaweedfs")
+            STACKS=("traefik" "postgresql" "seaweedfs" "redis")
             for stack_name in "${STACKS[@]}"; do
               echo "Removing stack: ${stack_name}"
               sudo docker stack rm "${stack_name}" 2>/dev/null || true
@@ -76,7 +76,7 @@ jobs:
 
   # Job 3: Actualizar secretos
   update-secrets:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: remove-stacks
     steps:
@@ -125,7 +125,7 @@ jobs:
 
   # Job 4: Actualizar configs de Swarm
   update-configs:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: update-secrets
     steps:
@@ -164,7 +164,7 @@ jobs:
 
   # Job 5: Redesplegar servicios
   deploy-services:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: update-configs
     steps:
@@ -181,6 +181,7 @@ jobs:
               "traefik:/home/ubuntu/FreshStack/traefik/docker-compose.yml"
               "postgresql:/home/ubuntu/FreshStack/postgresql/docker-compose.yml"
               "seaweedfs:/home/ubuntu/FreshStack/seaweedfs/docker-compose.yml"
+              "redis:/home/ubuntu/FreshStack/redis/docker-compose.yml"
             )
             for stack in "${STACKS[@]}"; do
               stack_name="${stack%%:*}"
