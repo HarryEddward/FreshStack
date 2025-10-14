@@ -33,7 +33,7 @@ services:
     networks:
       - traefik-public
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $(cat /run/secrets/REDIS_PASSWORD) ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -65,7 +65,7 @@ services:
     depends_on:
       - redis-master
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $(cat /run/secrets/REDIS_PASSWORD) ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
