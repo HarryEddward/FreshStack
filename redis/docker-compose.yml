@@ -1,5 +1,5 @@
 secrets:
-  REDIS_MASTER_SECRET:
+  REDIS_PASSWORD:
     external: true
 
 networks:
@@ -20,9 +20,11 @@ services:
     image: bitnami/redis:latest
     container_name: redis-master
     hostname: redis-master
+    secrets:
+      - REDIS_PASSWORD
     environment:
       - REDIS_REPLICATION_MODE=master
-      - REDIS_PASSWORD=SECRETPWS
+      - REDIS_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
       - REDIS_PORT_NUMBER=6379
     volumes:
       - redis_master_data:/bitnami/redis/data
@@ -31,7 +33,7 @@ services:
     networks:
       - traefik-public
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $(cat /run/secrets/REDIS_PASSWORD) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -45,12 +47,14 @@ services:
     image: bitnami/redis:latest
     container_name: redis-replica
     hostname: redis-replica
+    secrets:
+      - REDIS_PASSWORD
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD=SECRETPWS
-      - REDIS_PASSWORD=SECRETPWS
+      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
+      - REDIS_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
       - REDIS_PORT_NUMBER=6379
     volumes:
       - redis_replica_data:/bitnami/redis/data
@@ -61,7 +65,7 @@ services:
     depends_on:
       - redis-master
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "SECRETPWS", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $(cat /run/secrets/REDIS_PASSWORD) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -70,16 +74,18 @@ services:
       restart_policy:
         condition: any
 
-  # Redis Sentinel (un solo nodo es suficiente para monitoreo)
+  # Redis Sentinel
   redis-sentinel:
     image: bitnami/redis-sentinel:latest
     container_name: redis-sentinel
     hostname: redis-sentinel
+    secrets:
+      - REDIS_PASSWORD
     environment:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD=SECRETPWS
-      - REDIS_SENTINEL_PASSWORD=SECRETPWS
+      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
+      - REDIS_SENTINEL_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
       - REDIS_SENTINEL_QUORUM=1
       - REDIS_SENTINEL_DOWN_AFTER=5000
       - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000

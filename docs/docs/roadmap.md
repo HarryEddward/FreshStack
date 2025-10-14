@@ -61,7 +61,8 @@ sidebar_position: 1
 - ✅ Keycloak en Producción en HA aplicado
 - ✅ Descargar todas las imagenes necesarias al nodo maestro desde Github Actions
 - ✅ Pruebas de producción con Keycloak aplicado en SSL Wrapper con Treafik
-- 🏗️ Hola
+- ✅ Eureka, web en construcción antes de la publicación definitiva esta publicada! (2025/10/13)
+- 🏗️ Mejorar la autoamtización de varios builds locales desde Github Actions YML file
 - ✅ Aplicar archivo CI/CD de Github Actions para aplicar la automatización de nuevos secretos al haber un nuevo cambio aplicados en Docker Swarm desde Github del repositorio.
 - 🏗️ Reconfigurar todo el entorno local a testeo en producción del proyecto
 - ❌ Crear un componente de Preact para la gestión con IndexDB sobre los objetos blob

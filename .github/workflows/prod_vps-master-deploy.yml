@@ -76,7 +76,7 @@ jobs:
 
   # Job 3: Actualizar secretos
   update-secrets:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: remove-stacks
     steps:
@@ -90,6 +90,7 @@ jobs:
           KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET: ${{ secrets.KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET }}
           POSTGRESQL_PASSWORD: ${{ secrets.POSTGRESQL_PASSWORD }}
           POSTGRESQL_USERNAME: ${{ secrets.POSTGRESQL_USERNAME }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           SEAWEEDFS_S3_ACCESS_KEY: ${{ secrets.SEAWEEDFS_S3_ACCESS_KEY }}
           SEAWEEDFS_S3_SECRET_KEY: ${{ secrets.SEAWEEDFS_S3_SECRET_KEY }}
           SEAWEEDFS_S3_USERNAME: ${{ secrets.SEAWEEDFS_S3_USERNAME }}
@@ -110,6 +111,7 @@ jobs:
               [JENKINS_SECRET_KEY]=$JENKINS_SECRET_KEY
               [KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET]=$KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET
               [POSTGRESQL_PASSWORD]=$POSTGRESQL_PASSWORD
+              [REDIS_PASSWORD]=$REDIS_PASSWORD
               [POSTGRESQL_USERNAME]=$POSTGRESQL_USERNAME
               [SEAWEEDFS_S3_ACCESS_KEY]=$SEAWEEDFS_S3_ACCESS_KEY
               [SEAWEEDFS_S3_SECRET_KEY]=$SEAWEEDFS_S3_SECRET_KEY
