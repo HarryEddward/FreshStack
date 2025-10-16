@@ -62,15 +62,13 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik`)"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/dashboard`)"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth,dashboard-stripprefix"
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
-
-
-
+        - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/dashboard"
 
         # Middleware CrowdSec (se aplicará globalmente a todos los routers que lo usen)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
