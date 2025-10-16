@@ -120,3 +120,11 @@ secrets:
 configs:
   tls_conf:
     external: true
+
+volumes:
+  crowdsec-db:
+    driver: local
+  crowdsec-config:
+    driver: local
+  traefik-logs:
+    driver: local
