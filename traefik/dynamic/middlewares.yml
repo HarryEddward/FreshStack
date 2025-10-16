@@ -1,0 +1,36 @@
+http:
+  middlewares:
+    crowdsec:
+      plugin:
+        crowdsec:
+          enabled: true
+          logLevel: INFO
+          
+          # Modo de operación (recomendado: stream para producción)
+          crowdsecMode: stream
+          
+          # Configuración LAPI
+          crowdsecLapiScheme: http
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecLapiPath: /
+          crowdsecLapiKeyFile: /run/secrets/crowdsec_api_key
+          
+          # Intervalos de actualización
+          updateIntervalSeconds: 60        # Cada 60s actualiza la cache
+          defaultDecisionSeconds: 60
+          httpTimeoutSeconds: 10
+          
+          # Código de respuesta para IPs bloqueadas
+          remediationStatusCode: 403
+          
+          # Headers
+          forwardedHeadersCustomName: X-Forwarded-For
+          
+          # IPs de confianza (opcional - ej: tu VPN o red interna)
+          # clientTrustedIPs:
+          #   - 192.168.1.0/24
+          
+          # Si estás detrás de Cloudflare u otro proxy
+          # forwardedHeadersTrustedIPs:
+          #   - 173.245.48.0/20
+          #   - 103.21.244.0/22

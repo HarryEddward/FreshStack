@@ -58,6 +58,22 @@ services:
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
 
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    environment:
+      - COLLECTIONS=crowdsecurity/traefik
+      - GID=0
+      - BOUNCER_KEY_TRAEFIK=${CROWDSEC_BOUNCER_KEY}
+    volumes:
+      - crowdsec-data:/etc/crowdsec/data
+      - /var/log:/var/log:ro
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
   #whoami:
   #  image: traefik/whoami
   #  deploy:

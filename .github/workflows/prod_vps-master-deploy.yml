@@ -73,12 +73,90 @@ jobs:
               done
             done
             echo "✅ Stacks removidos correctamente"
+  
+  create-networks:
+    if: true
+    runs-on: ubuntu-latest
+    needs: remove-stacks
+    steps:
+      - name: Create Networks on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+
+            NETWORKS=(
+              "traefik-public"
+            )
+
+            for NETWORK_NAME in "${NETWORKS[@]}"; do
+              if sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+                echo "La network '$NETWORK_NAME' ya existe. Omitiendo creación."
+              else
+                echo "Creando network '$NETWORK_NAME'..."
+                sudo docker network create \
+                  --driver=overlay \
+                  --attachable \
+                  --opt encrypted \
+                  "$NETWORK_NAME"
+                echo "Network '$NETWORK_NAME' creada correctamente."
+              fi
+            done
+
+            echo "✅ Todas las networks fueron creadas o ya existían."
+  
+  install-images:
+    if: true
+    runs-on: ubuntu-latest
+    needs: create-networks
+    steps:
+      - name: Pull necessary Docker images (skip if exists)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            IMAGES=(
+              "traefik:v3.1"
+              "traefik/whoami:latest"
+              "jenkins/jenkins:lts"
+              "jenkins/inbound-agent:latest"
+              "bitnami/redis:latest"
+              "bitnami/redis-sentinel:latest"
+              "chrislusf/seaweedfs"
+              "denoland/deno:alpine-1.41.2"
+              "node:18-alpine"
+              "quay.io/keycloak/keycloak:latest"
+              "bitnami/pgbouncer:latest"
+              "bitnami/postgresql-repmgr:16"
+              "denoland/deno:alpine"
+              "bitnami/redis:latest"
+              "bitnami/redis-sentinel:latest"
+              "nginx:alpine"
+              "crowdsecurity/crowdsec:latest"
+            )
+            for image in "${IMAGES[@]}"; do
+              if sudo docker image inspect "${image}" >/dev/null 2>&1; then
+                echo "✅ Imagen ya existe: ${image}"
+              else
+                echo "📥 Descargando imagen: ${image}"
+                sudo docker pull "${image}"
+              fi
+            done
+            echo "✅ Proceso de imágenes completado"
 
   # Job 3: Actualizar secretos
   update-secrets:
     if: true
     runs-on: ubuntu-latest
-    needs: remove-stacks
+    needs: install-images
     steps:
       - name: Update Docker Swarm secrets
         uses: appleboy/ssh-action@v1.0.3
@@ -127,7 +205,7 @@ jobs:
 
   # Job 4: Actualizar configs de Swarm
   update-configs:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: update-secrets
     steps:
@@ -151,6 +229,7 @@ jobs:
             echo "==> Aplicando configs de Docker Swarm..."
             CONFIGS=(
               "tls_conf:/home/ubuntu/FreshStack/traefik/dynamic/tls.yaml"
+              "middlewares_conf:/home/ubuntu/FreshStack/traefik/dynamic/middlewares.yml"
               "s3_conf:/home/ubuntu/FreshStack/seaweedfs/s3.json.template"
             )
             for entry in "${CONFIGS[@]}"; do
@@ -168,7 +247,7 @@ jobs:
   build-images:
     if: true
     runs-on: ubuntu-latest
-    needs: remove-stacks
+    needs: update-configs
     steps:
       - name: Build Docker images
         uses: appleboy/ssh-action@v1.0.3

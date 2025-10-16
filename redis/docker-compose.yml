@@ -1,5 +1,5 @@
 secrets:
-  REDIS_PASSWORD:
+  redis_password:
     external: true
 
 networks:
@@ -21,10 +21,10 @@ services:
     container_name: redis-master
     hostname: redis-master
     secrets:
-      - REDIS_PASSWORD
+      - redis_password
     environment:
       - REDIS_REPLICATION_MODE=master
-      - REDIS_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT_NUMBER=6379
     volumes:
       - redis_master_data:/bitnami/redis/data
@@ -48,13 +48,13 @@ services:
     container_name: redis-replica
     hostname: redis-replica
     secrets:
-      - REDIS_PASSWORD
+      - redis_password
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
-      - REDIS_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
+      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT_NUMBER=6379
     volumes:
       - redis_replica_data:/bitnami/redis/data
@@ -80,12 +80,12 @@ services:
     container_name: redis-sentinel
     hostname: redis-sentinel
     secrets:
-      - REDIS_PASSWORD
+      - redis_password
     environment:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
-      - REDIS_SENTINEL_PASSWORD_FILE=/run/secrets/REDIS_PASSWORD
+      - REDIS_MASTER_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_SENTINEL_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_SENTINEL_QUORUM=1
       - REDIS_SENTINEL_DOWN_AFTER=5000
       - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
