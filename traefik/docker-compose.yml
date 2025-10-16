@@ -46,6 +46,8 @@ services:
         target: /etc/traefik/certs/cafebuy.key
       - source: crowdsec_bouncer_key
         target: /run/secrets/crowdsec_bouncer_key
+      - source: traefik_dashboard_auth
+        target: /run/secrets/traefik_dashboard_auth
 
     configs:
       - source: tls_conf
@@ -60,10 +62,15 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/dashboard`)"
-        - "traefik.http.routers.traefik-dashboard.service=api@internal"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik`)"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+        - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
+        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
+
+
+
 
         # Middleware CrowdSec (se aplicará globalmente a todos los routers que lo usen)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
@@ -115,6 +122,8 @@ secrets:
   ssl_key:
     external: true
   crowdsec_bouncer_key:
+    external: true
+  traefik_dashboard_auth:
     external: true
 
 configs:
