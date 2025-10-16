@@ -13,7 +13,7 @@ services:
         - "traefik.http.routers.prelaunch.rule=Host(`www.cafebuy.es`)"
         - "traefik.http.routers.prelaunch.entrypoints=websecure"
         - "traefik.http.routers.prelaunch.tls=true"
-        - "traefik.http.routers.prelaunch.middlewares=crowdsec-bouncer@swarm"
+        #- "traefik.http.routers.prelaunch.middlewares=crowdsec-bouncer@swarm"
         - "traefik.http.services.prelaunch.loadbalancer.server.port=80"
     networks:
       - traefik-public

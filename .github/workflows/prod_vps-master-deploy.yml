@@ -235,6 +235,7 @@ jobs:
               "tls_conf:/home/ubuntu/FreshStack/traefik/dynamic/tls.yaml"
               "middlewares_conf:/home/ubuntu/FreshStack/traefik/dynamic/middlewares.yml"
               "s3_conf:/home/ubuntu/FreshStack/seaweedfs/s3.json.template"
+              "crowdsec_acquis:/home/ubuntu/FreshStack/traefik/crowsec/acquis.yaml"
             )
             for entry in "${CONFIGS[@]}"; do
               IFS=":" read -r config_name file_path <<< "$entry"

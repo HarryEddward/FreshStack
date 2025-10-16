@@ -1,0 +1,10 @@
+filenames:
+  - /var/log/traefik/*
+labels:
+  type: traefik
+---
+source: docker
+container_name:
+  - traefik*
+labels:
+  type: traefik

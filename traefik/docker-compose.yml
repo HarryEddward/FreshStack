@@ -86,14 +86,21 @@ services:
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
 
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     environment:
       - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve
       - GID=0
+      - BOUNCER_KEY_TRAEFIK=/run/secrets/crowdsec_bouncer_key
+    secrets:
+      - source: crowdsec_bouncer_key
+        target: /run/secrets/crowdsec_bouncer_key
+    configs:
+      - source: crowdsec_acquis
+        target: /etc/crowdsec/acquis.yaml
     volumes:
       - crowdsec-db:/var/lib/crowdsec/data
       - crowdsec-config:/etc/crowdsec
@@ -105,6 +112,7 @@ services:
         constraints:
           - node.role == manager
 
+  
 
   #whoami:
   #  image: traefik/whoami
