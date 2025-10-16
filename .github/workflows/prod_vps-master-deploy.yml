@@ -163,6 +163,7 @@ jobs:
         env:
           SSL_CERT: ${{ secrets.SSL_CERT }}
           SSL_KEY: ${{ secrets.SSL_KEY }}
+          CROWDSEC_BOUNCER_KEY: ${{ secrets.CROWDSEC_BOUNCER_KEY }}
           FRESH_SESSION_SECRET: ${{ secrets.FRESH_SESSION_SECRET }}
           JENKINS_SECRET_KEY: ${{ secrets.JENKINS_SECRET_KEY }}
           KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET: ${{ secrets.KEYCLOAK_CLIENT_BACKEND_SERVER_SECRET }}
@@ -196,6 +197,7 @@ jobs:
               [SEAWEEDFS_S3_USERNAME]=$SEAWEEDFS_S3_USERNAME
               [STRIPE_PUBLISHABLE_KEY]=$STRIPE_PUBLISHABLE_KEY
               [STRIPE_SECRET_KEY]=$STRIPE_SECRET_KEY
+              [CROWDSEC_BOUNCER_KEY]=$CROWDSEC_BOUNCER_KEY
             )
             for swarm_name in "${!SECRETS[@]}"; do
               sudo docker secret rm "${swarm_name,,}" 2>/dev/null || true

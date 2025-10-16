@@ -1,5 +1,6 @@
 version: "3.8"
 
+
 services:
   traefik:
     image: traefik:v3.1
@@ -21,6 +22,10 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
 
+      # Habilitar plugins experimentales
+      - "--experimental.plugins.crowdsec-bouncer.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
+      - "--experimental.plugins.crowdsec-bouncer.version=v1.4.5"
+
     ports:
       - target: 80
         published: 80
@@ -39,6 +44,8 @@ services:
         target: /etc/traefik/certs/cafebuy.crt
       - source: ssl_key
         target: /etc/traefik/certs/cafebuy.key
+      - source: crowdsec_bouncer_key
+        target: /run/secrets/crowdsec_bouncer_key
 
     configs:
       - source: tls_conf
@@ -58,21 +65,32 @@ services:
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
 
+        # Middleware CrowdSec (se aplicará globalmente a todos los routers que lo usen)
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
+        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
+
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     environment:
-      - COLLECTIONS=crowdsecurity/traefik
+      - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve
       - GID=0
-      - BOUNCER_KEY_TRAEFIK=${CROWDSEC_BOUNCER_KEY}
     volumes:
-      - crowdsec-data:/etc/crowdsec/data
-      - /var/log:/var/log:ro
+      - crowdsec-db:/var/lib/crowdsec/data
+      - crowdsec-config:/etc/crowdsec
+      - traefik-logs:/var/log/traefik:ro
     networks:
       - traefik-public
     deploy:
       placement:
         constraints:
           - node.role == manager
+
 
   #whoami:
   #  image: traefik/whoami
@@ -95,6 +113,8 @@ secrets:
   ssl_cert:
     external: true
   ssl_key:
+    external: true
+  crowdsec_bouncer_key:
     external: true
 
 configs:
