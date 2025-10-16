@@ -68,13 +68,13 @@ services:
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth"
+        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix" #,dashboard-auth"
         
         # Middleware para eliminar el prefijo /traefik
         - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
         
         # Middleware para autenticación
-        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
+        #- "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
         
         # IMPORTANTE: Especificar un puerto para el servicio (aunque no se use realmente)
         - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"
