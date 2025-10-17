@@ -66,14 +66,14 @@ services:
         # Dummy port for Swarm
         - "traefik.http.services.traefik.loadbalancer.server.port=888"
         # Main router for /traefik (dashboard and API)
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik`)"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik/dashboard`)"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
         - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth,dashboard-redirect"
         # StripPrefix middleware (removes /traefik)
         - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
-        # Redirect middleware for trailing slash
+        # Redirect middleware for trailing slash (common fix for ERR_INVALID_REDIRECT)
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^(https?://[^:/]+(:\\d+)?)/traefik$$"
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=$$1/traefik/"
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true"
