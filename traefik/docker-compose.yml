@@ -92,7 +92,7 @@ services:
       - crowdsec-config:/etc/crowdsec
       - traefik-logs:/var/log/traefik:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    entrypoint: ["/bin/sh", "-c", "if [ -f /run/secrets/crowdsec_bouncer_key ] && ! cscli bouncers list | grep -q 'traefik-bouncer'; then cscli bouncers add traefik-bouncer --key $(cat /run/secrets/crowdsec_bouncer_key); fi; /docker_start.sh"]
+    entrypoint: ["/bin/sh", "-c", "if [ -f /run/secrets/crowdsec_bouncer_key ] && ! cscli bouncers list | grep -q 'traefik-bouncer'; then cscli bouncers add traefik-bouncer --key $$(cat /run/secrets/crowdsec_bouncer_key); fi; /docker_start.sh"]
     networks:
       - traefik-public
     deploy:
