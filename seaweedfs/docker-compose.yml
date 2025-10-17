@@ -45,7 +45,6 @@ services:
         - "traefik.http.routers.seaweedfs-master.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-master.loadbalancer.server.port=9333"
         - "traefik.http.middlewares.seaweedfs-master-strip.stripprefix.prefixes=/seaweedfs/master"
-        - "traefik.http.middlewares.seaweedfs-master-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-master.middlewares=seaweedfs-master-strip"
       restart_policy:
         condition: on-failure
@@ -92,7 +91,6 @@ services:
         - "traefik.http.routers.seaweedfs-filer.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-filer.loadbalancer.server.port=8888"
         - "traefik.http.middlewares.seaweedfs-filer-strip.stripprefix.prefixes=/seaweedfs/filer"
-        - "traefik.http.middlewares.seaweedfs-filer-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-filer.middlewares=seaweedfs-filer-strip"
       restart_policy:
         condition: on-failure
@@ -132,7 +130,6 @@ services:
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
         # Middleware para strip prefix
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
-        - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.forceslash=false"
         # Headers para S3
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.seaweedfs-s3-headers.headers.customrequestheaders.X-Forwarded-Host=www.cafebuy.es"
@@ -167,7 +164,6 @@ services:
         - "traefik.http.routers.seaweedfs-webdav.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-webdav.loadbalancer.server.port=7333"
         - "traefik.http.middlewares.seaweedfs-webdav-strip.stripprefix.prefixes=/seaweedfs/webdav"
-        - "traefik.http.middlewares.seaweedfs-webdav-strip.stripprefix.forceslash=false"
         - "traefik.http.routers.seaweedfs-webdav.middlewares=seaweedfs-webdav-strip"
       restart_policy:
         condition: on-failure

@@ -265,7 +265,6 @@ services:
         - "traefik.http.services.keycloak.loadbalancer.server.port=8186"
         - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
         - "traefik.http.routers.keycloak.entrypoints=websecure"
-        - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
       restart_policy:
         condition: on-failure
     networks:
