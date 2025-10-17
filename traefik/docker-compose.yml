@@ -78,7 +78,7 @@ services:
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=$$1/traefik/"
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true"
         
-        - "traefik.http.middlewares.dashboard-apirewrite.replacepathregex.regexp=^/api/(.*)$"
+        - "traefik.http.middlewares.dashboard-apirewrite.replacepathregex.regexp=^/api/(.*)$$"
         - "traefik.http.middlewares.dashboard-apirewrite.replacepathregex.replacement=/traefik/api/$$1"
         # Auth middleware
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
