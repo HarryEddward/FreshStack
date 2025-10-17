@@ -9,6 +9,7 @@ services:
       - "--accesslog=true"
       - "--api.dashboard=true"
       - "--api.insecure=false"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.watch=true"
       - "--providers.swarm.exposedbydefault=false"
@@ -37,7 +38,9 @@ services:
         mode: ingress
 
     volumes:
+      - "traefik-logs:/var/log/traefik"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      
 
     secrets:
       - source: ssl_cert
@@ -105,6 +108,7 @@ services:
       - crowdsec-db:/var/lib/crowdsec/data
       - crowdsec-config:/etc/crowdsec
       - traefik-logs:/var/log/traefik:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik-public
     deploy:
