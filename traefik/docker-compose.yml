@@ -144,6 +144,8 @@ secrets:
 configs:
   tls_conf:
     external: true
+  crowdsec_acquis:
+    external: true
 
 volumes:
   crowdsec-db:
