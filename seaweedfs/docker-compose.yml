@@ -42,10 +42,10 @@ services:
         - "traefik.docker.network=traefik-public"
         - "traefik.http.routers.seaweedfs-master.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/master`)"
         - "traefik.http.routers.seaweedfs-master.entrypoints=websecure"
-        - "traefik.http.routers.seaweedfs-master.tls.certresolver=myresolver"
         - "traefik.http.services.seaweedfs-master.loadbalancer.server.port=9333"
         - "traefik.http.middlewares.seaweedfs-master-strip.stripprefix.prefixes=/seaweedfs/master"
         - "traefik.http.routers.seaweedfs-master.middlewares=seaweedfs-master-strip"
+        - "traefik.http.routers.seaweedfs-master.tls=true"
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -88,10 +88,11 @@ services:
         - "traefik.docker.network=traefik-public"
         - "traefik.http.routers.seaweedfs-filer.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/filer`)"
         - "traefik.http.routers.seaweedfs-filer.entrypoints=websecure"
-        - "traefik.http.routers.seaweedfs-filer.tls.certresolver=myresolver"
+        - "traefik.http.routers.seaweedfs-filer.tls=true"
         - "traefik.http.services.seaweedfs-filer.loadbalancer.server.port=8888"
         - "traefik.http.middlewares.seaweedfs-filer-strip.stripprefix.prefixes=/seaweedfs/filer"
         - "traefik.http.routers.seaweedfs-filer.middlewares=seaweedfs-filer-strip"
+        
       restart_policy:
         condition: on-failure
         delay: 10s
@@ -126,7 +127,7 @@ services:
         # S3 API en /seaweedfs/s3
         - "traefik.http.routers.seaweedfs-s3.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/s3`)"
         - "traefik.http.routers.seaweedfs-s3.entrypoints=websecure"
-        - "traefik.http.routers.seaweedfs-s3.tls.certresolver=myresolver"
+        - "traefik.http.routers.seaweedfs-s3.tls=true"
         - "traefik.http.services.seaweedfs-s3.loadbalancer.server.port=8333"
         # Middleware para strip prefix
         - "traefik.http.middlewares.seaweedfs-s3-strip.stripprefix.prefixes=/seaweedfs/s3"
@@ -161,7 +162,7 @@ services:
         - "traefik.docker.network=traefik-public"
         - "traefik.http.routers.seaweedfs-webdav.rule=Host(`www.cafebuy.es`) && PathPrefix(`/seaweedfs/webdav`)"
         - "traefik.http.routers.seaweedfs-webdav.entrypoints=websecure"
-        - "traefik.http.routers.seaweedfs-webdav.tls.certresolver=myresolver"
+        - "traefik.http.routers.seaweedfs-webdav.tls=true"
         - "traefik.http.services.seaweedfs-webdav.loadbalancer.server.port=7333"
         - "traefik.http.middlewares.seaweedfs-webdav-strip.stripprefix.prefixes=/seaweedfs/webdav"
         - "traefik.http.routers.seaweedfs-webdav.middlewares=seaweedfs-webdav-strip"
