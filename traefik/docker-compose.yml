@@ -61,9 +61,6 @@ services:
       - traefik-public
 
     deploy:
-      placement:
-        constraints:
-          - node.role == manager
       labels:
         - "traefik.enable=true"
         # Router for the dashboard
@@ -71,9 +68,12 @@ services:
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth"
+        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth,dashboard-apirewrite"
         # Middleware to strip /traefik prefix
         - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
+        # Middleware to rewrite API calls
+        - "traefik.http.middlewares.dashboard-apirewrite.replacepathregex.regexp=^/api/(.*)$"
+        - "traefik.http.middlewares.dashboard-apirewrite.replacepathregex.replacement=/traefik/api/$$1"
         # Middleware for authentication
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
         # Dummy port for Swarm (not used by api@internal but required)
