@@ -14,7 +14,7 @@ services:
       - "--providers.swarm.watch=true"
       - "--providers.swarm.exposedbydefault=false"
       - "--providers.swarm.network=traefik-public"
-      #- "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
