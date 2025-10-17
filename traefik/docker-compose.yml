@@ -76,13 +76,13 @@ services:
         
         
         # Middleware para eliminar el prefijo /traefik
-        - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
+        #- "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
         
         # Middleware para autenticación
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
         
         # IMPORTANTE: Especificar un puerto para el servicio (aunque no se use realmente)
-        # - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"
+        - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"
         
         # Middlewares de CrowdSec (sin cambios)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
