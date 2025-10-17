@@ -64,7 +64,7 @@ services:
       labels:
         - "traefik.enable=true"
         # Router for the dashboard
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`)"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik`)"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"        
         - "traefik.http.routers.traefik-dashboard.tls=true"
