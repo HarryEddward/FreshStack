@@ -65,35 +65,30 @@ services:
         constraints:
           - node.role == manager
       labels:
-        - "traefik.enable=true"
-        
-        # Router para el dashboard
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/traefik/api`) || PathPrefix(`/traefik/dashboard`))"
-        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-        - "traefik.http.routers.traefik-dashboard.service=api@internal"
-        - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth"
-        
-        
-        # Middleware para eliminar el prefijo /traefik
-        #- "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
-        
-        # Middleware para autenticación
-        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
-        
-        # IMPORTANTE: Especificar un puerto para el servicio (aunque no se use realmente)
-        - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"
-        
-        # Middlewares de CrowdSec (sin cambios)
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
-
+        deploy:
+  labels:
+    - "traefik.enable=true"
+    # Router for the dashboard
+    - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/traefik/api`) || PathPrefix(`/traefik/dashboard`))"
+    - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+    - "traefik.http.routers.traefik-dashboard.service=api@internal"
+    - "traefik.http.routers.traefik-dashboard.tls=true"
+    - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-auth"
+    # Middleware to strip /traefik prefix
+    - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
+    # Middleware for authentication
+    - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
+    # Dummy port for Swarm (not used by api@internal but required)
+    - "traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080"
+    # Crowdsec middlewares (unchanged)
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
+    - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     environment:
