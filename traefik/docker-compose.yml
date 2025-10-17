@@ -63,23 +63,23 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
-        # Dummy port for Swarm (use 888 as per guides)
+        # Dummy port for Swarm
         - "traefik.http.services.traefik.loadbalancer.server.port=888"
-        # Router with /traefik prefix
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && PathPrefix(`/traefik`)"
+        # Router with combined sub-paths for dashboard and API
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/traefik/api`) || PathPrefix(`/traefik/dashboard`))"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-redirect,dashboard-auth"  # Chain middlewares
-        # StripPrefix middleware (removes /traefik)
-        - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik"
-        # Redirect middleware for trailing slash (common fix for ERR_INVALID_REDIRECT)
-        - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^(https?://[^:/]+(:\\d+)?)/traefik$$"
-        - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=$$1/traefik/"
+        - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-stripprefix,dashboard-redirect,dashboard-auth"
+        # StripPrefix for /traefik/api (removes /traefik for API calls)
+        - "traefik.http.middlewares.dashboard-stripprefix.stripprefix.prefixes=/traefik/api,/traefik/dashboard"
+        # Redirect for trailing slash (fixes ERR_INVALID_REDIRECT)
+        - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^(https?://[^:/]+(:\\d+)?)/traefik/dashboard$$"
+        - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=$$1/traefik/dashboard/"
         - "traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true"
         # Auth middleware
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/traefik_dashboard_auth"
-        # CrowdSec middlewares (exclude from dashboard if it blocks; test and add if needed)
+        # CrowdSec middlewares (excluded from dashboard to avoid 403; add if needed after testing)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
