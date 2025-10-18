@@ -26,7 +26,7 @@ secrets:
 services:
   # PostgreSQL Primary para aplicación principal
   postgres-primary:
-    image: bitnamisecure/postgresql-repmgr:16
+    image: bitnamilegacy/postgresql-repmgr:latest
     hostname: postgres-primary
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=super_secure_pass
@@ -59,7 +59,7 @@ services:
 
   # PostgreSQL Replica para aplicación principal
   postgres-replica:
-    image: bitnami/postgresql-repmgr:16
+    image: bitnamilegacy/postgresql-repmgr:latest
     hostname: postgres-replica
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=super_secure_pass
@@ -136,7 +136,7 @@ services:
 
   # PostgreSQL Primary para Keycloak
   postgresql-keycloak-primary:
-    image: bitnami/postgresql-repmgr:16
+    image: bitnamilegacy/postgresql-repmgr:latest
     hostname: postgresql-keycloak-primary
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything
@@ -169,7 +169,7 @@ services:
 
   # PostgreSQL Replica para Keycloak
   postgresql-keycloak-replica:
-    image: bitnami/postgresql-repmgr:16
+    image: bitnamilegacy/postgresql-repmgr:latest
     hostname: postgresql-keycloak-replica
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adrian_dark_draw_everything
