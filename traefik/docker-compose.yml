@@ -67,6 +67,7 @@ services:
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
         
         # Middlewares de CrowdSec (sin cambios)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
