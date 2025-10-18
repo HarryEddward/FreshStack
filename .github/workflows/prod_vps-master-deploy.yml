@@ -134,7 +134,7 @@ jobs:
               "denoland/deno:alpine-1.41.2"
               "node:18-alpine"
               "quay.io/keycloak/keycloak:latest"
-              "bitnami/pgbouncer:latest"
+              "bitnamilegacy/pgbouncer:latest"
               "bitnami/postgresql-repmgr:16"
               "denoland/deno:alpine"
               "bitnami/redis:latest"

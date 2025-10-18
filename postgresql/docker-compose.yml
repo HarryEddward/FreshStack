@@ -26,7 +26,7 @@ secrets:
 services:
   # PostgreSQL Primary para aplicación principal
   postgres-primary:
-    image: bitnami/postgresql-repmgr:16
+    image: bitnamisecure/postgresql-repmgr:16
     hostname: postgres-primary
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=super_secure_pass
@@ -93,7 +93,7 @@ services:
 
   # PgBouncer para aplicación principal
   pgbouncer:
-    image: bitnami/pgbouncer:latest
+    image: bitnamilegacy/pgbouncer:latest
     environment:
       - POSTGRESQL_HOST=postgres-primary
       - POSTGRESQL_PORT=5432
@@ -203,7 +203,7 @@ services:
 
   # PgBouncer para Keycloak
   pgbouncer-keycloak:
-    image: bitnami/pgbouncer:latest
+    image: bitnamilegacy/pgbouncer:latest
     environment:
       - POSTGRESQL_HOST=postgresql-keycloak-primary
       - POSTGRESQL_PORT=5432
@@ -308,3 +308,8 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
+
+
+  #bitnamisecure/postgresql
+  #bitnamilegacy/pgbouncer
+  #bitnami/postgresql-repmgr
