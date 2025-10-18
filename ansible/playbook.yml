@@ -154,3 +154,4 @@
           # Para añadir un worker:
           docker swarm join --token {{ worker_token.stdout | default('WORKER_TOKEN') }} {{ manager_ip.stdout | default('MANAGER_IP') }}:2377
       when: swarm_status.stdout == "active" or swarm_init.changed
+      
