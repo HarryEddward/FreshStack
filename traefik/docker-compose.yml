@@ -60,8 +60,8 @@ services:
 
     deploy:
       labels:
-        - "traefik.enable=false"
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
