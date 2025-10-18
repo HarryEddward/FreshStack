@@ -17,3 +17,4 @@ services:
         - "traefik.http.services.prelaunch.loadbalancer.server.port=80"
     networks:
       - traefik-public
+

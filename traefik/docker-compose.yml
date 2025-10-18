@@ -62,7 +62,7 @@ services:
 
     deploy:
       labels:
-        - "traefik.enable=false"
+        - "traefik.enable=true"
         - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
