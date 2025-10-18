@@ -28,7 +28,9 @@ services:
     volumes:
       - redis_master_data:/bitnami/redis/data
     ports:
-      - "6379:6379"
+      - target: 6379
+        published: 6379
+        mode: host
     networks:
       - traefik-public
     healthcheck:
@@ -57,7 +59,9 @@ services:
     volumes:
       - redis_replica_data:/bitnami/redis/data
     ports:
-      - "6380:6379"
+      - target: 6379
+        published: 6380
+        mode: host
     networks:
       - traefik-public
     depends_on:
@@ -90,7 +94,9 @@ services:
     volumes:
       - redis_sentinel_data:/bitnami/redis-sentinel
     ports:
-      - "26379:26379"
+      - target: 26379
+        published: 26379
+        mode: host
     networks:
       - traefik-public
     depends_on:

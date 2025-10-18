@@ -6,6 +6,10 @@ networks:
 services:
   prelaunch:
     image: cafebuy-prelaunch:latest
+    ports:
+      - target: 80
+        published: 80
+        mode: host
     deploy:
       replicas: 2
       labels:

@@ -31,6 +31,10 @@ services:
   master:
     image: chrislusf/seaweedfs:latest
     command: "master -ip=master -ip.bind=0.0.0.0 -port=9333"
+    ports:
+      - target: 9333
+        published: 9333
+        mode: host
     deploy:
       mode: replicated
       replicas: 1
@@ -57,6 +61,10 @@ services:
   volume:
     image: chrislusf/seaweedfs:latest
     command: 'volume -mserver="master:9333" -ip.bind=0.0.0.0 -port=8080 -max=100 -publicUrl=volume:8080'
+    ports:
+      - target: 8080
+        published: 8080
+        mode: host
     volumes:
       - seaweedfs_volume:/data
     depends_on:
@@ -80,6 +88,10 @@ services:
     depends_on:
       - master
       - volume
+    ports:
+      - target: 8888
+        published: 8888
+        mode: host
     deploy:
       mode: replicated
       replicas: 1
@@ -118,6 +130,10 @@ services:
       - filer
     volumes:
       - ./s3-init.sh:/s3-init.sh:ro
+    ports:
+      - target: 8333
+        published: 8333
+        mode: host
     deploy:
       mode: replicated
       replicas: 1
@@ -150,6 +166,10 @@ services:
   webdav:
     image: chrislusf/seaweedfs:latest
     command: 'webdav -filer="filer:8888" -port=7333'
+    ports:
+      - target: 7333
+        published: 7333
+        mode: host
     depends_on:
       - master
       - volume

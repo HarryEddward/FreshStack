@@ -1,3 +1,4 @@
+version: "3.8"
 
 networks:
   traefik-public:
@@ -15,8 +16,12 @@ volumes:
     driver: local
   keycloak_data_node1:
     driver: local
-  keycloak_data_node2:
-    driver: local
+
+secrets:
+  postgresql_password:
+    external: true
+  postgresql_username:
+    external: true
 
 services:
   # PostgreSQL Primary para aplicación principal
@@ -45,6 +50,12 @@ services:
       - pg_primary_data:/bitnami/postgresql
     networks:
       - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
   # PostgreSQL Replica para aplicación principal
   postgres-replica:
@@ -71,24 +82,24 @@ services:
       - POSTGRESQL_MASTER_PORT_NUMBER=5432
     volumes:
       - pg_replica_data:/bitnami/postgresql
-    depends_on:
-      - postgres-primary
-    deploy:
-      replicas: 1
     networks:
       - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
-  # PgBouncer para aplicación principal - configuración directa
+  # PgBouncer para aplicación principal
   pgbouncer:
     image: bitnami/pgbouncer:latest
     environment:
-      # Configuración de la base de datos PostgreSQL backend
       - POSTGRESQL_HOST=postgres-primary
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_USERNAME=adrian
       - POSTGRESQL_PASSWORD=super_secure_pass
       - POSTGRESQL_DATABASE=cafebuy-general-api-database
-      # Configuración de PgBouncer
       - PGBOUNCER_DATABASE=cafebuy-general-api-database
       - PGBOUNCER_LISTEN_ADDRESS=0.0.0.0
       - PGBOUNCER_PORT=5432
@@ -104,22 +115,28 @@ services:
       - PGBOUNCER_LOG_DISCONNECTIONS=1
       - PGBOUNCER_LOG_POOLER_ERRORS=1
       - PGBOUNCER_EXTRA_FLAGS=--verbose
-      # Usuarios admin
       - PGBOUNCER_STATS_USERS=adrian
+    # QUITAR ports publicados en Swarm - usar solo internamente
+    # ports:
+    #   - "5432:5432"
+    networks:
+      - traefik-public
     ports:
-      - "5432:5432"
-    depends_on:
-      - postgres-primary
+      - target: 5432
+        published: 5432
+        mode: host
     deploy:
       replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
+      # Si necesitas publicar el puerto, usa esto:
+      # ports:
+      #   - target: 5432
+      #     published: 5432
+      #     protocol: tcp
+      #     mode: host
       restart_policy:
         condition: on-failure
         delay: 5s
-    networks:
-      - traefik-public
+        max_attempts: 3
 
   # PostgreSQL Primary para Keycloak
   postgresql-keycloak-primary:
@@ -147,6 +164,12 @@ services:
       - pg_primary_data_keycloak:/bitnami/postgresql
     networks:
       - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
   # PostgreSQL Replica para Keycloak
   postgresql-keycloak-replica:
@@ -173,24 +196,24 @@ services:
       - POSTGRESQL_MASTER_PORT_NUMBER=5432
     volumes:
       - pg_replica_data_keycloak:/bitnami/postgresql
-    depends_on:
-      - postgresql-keycloak-primary
-    deploy:
-      replicas: 1
     networks:
       - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
-  # PgBouncer para Keycloak - configuración directa
+  # PgBouncer para Keycloak
   pgbouncer-keycloak:
     image: bitnami/pgbouncer:latest
     environment:
-      # Configuración de la base de datos PostgreSQL backend
       - POSTGRESQL_HOST=postgresql-keycloak-primary
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_USERNAME=admin
       - POSTGRESQL_PASSWORD=admin_secure_password
       - POSTGRESQL_DATABASE=cafebuy-keycloak-database
-      # Configuración de PgBouncer específica para Keycloak
       - PGBOUNCER_DATABASE=cafebuy-keycloak-database
       - PGBOUNCER_LISTEN_ADDRESS=0.0.0.0
       - PGBOUNCER_PORT=5432
@@ -207,22 +230,23 @@ services:
       - PGBOUNCER_LOG_POOLER_ERRORS=1
       - PGBOUNCER_EXTRA_FLAGS=--verbose
       - PGBOUNCER_STATS_USERS=admin
+    # QUITAR ports publicados
+    # ports:
+    #   - "5434:5432"
     ports:
-      - "5434:5432"
-    depends_on:
-      - postgresql-keycloak-primary
+      - target: 5434
+        published: 5434
+        mode: host
+    networks:
+      - traefik-public
     deploy:
       replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
       restart_policy:
         condition: on-failure
         delay: 5s
-    networks:
-      - traefik-public
+        max_attempts: 3
 
-  # Keycloak Node 1 - Updated for official image, production, and HA readiness
+  # Keycloak Node 1
   keycloak-node1:
     image: quay.io/keycloak/keycloak:latest
     hostname: keycloak-node1
@@ -252,22 +276,33 @@ services:
       - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
       - ./keycloak/themes:/opt/keycloak/providers/
       - keycloak_data_node1:/opt/keycloak/data
+    # QUITAR ports publicados
+    # ports:
+    #   - "8186:8186"
+    #   - "9000:9000"
+    #   - "7800:7800"
     ports:
-      - "8186:8186"
-      - "9000:9000"
-      - "7800:7800"
-    depends_on:
-      - pgbouncer-keycloak
+      - target: 8186
+        published: 8186
+        mode: host
+      - target: 9000
+        published: 9000
+        mode: host
+      - target: 7800
+        published: 7800
+        mode: host
+    networks:
+      - traefik-public
     deploy:
       replicas: 2
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
         - "traefik.http.services.keycloak.loadbalancer.server.port=8186"
         - "traefik.http.routers.keycloak.rule=Host(`www.cafebuy.es`) && PathPrefix(`/oauth`)"
         - "traefik.http.routers.keycloak.entrypoints=websecure"
         - "traefik.http.routers.keycloak.tls=true"
       restart_policy:
         condition: on-failure
-    networks:
-      - traefik-public
-    
+        delay: 5s
+        max_attempts: 3
