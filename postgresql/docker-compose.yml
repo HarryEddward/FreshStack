@@ -312,4 +312,4 @@ services:
 
   #bitnamisecure/postgresql
   #bitnamilegacy/pgbouncer
-  #bitnami/postgresql-repmgr
+  #bitnamilegacy/postgresql-repmgr
