@@ -67,14 +67,14 @@ services:
         - "traefik.http.routers.traefik-dashboard.tls=true"
         
         # Middlewares de CrowdSec (sin cambios)
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
-        - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.loglevel=INFO"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecMode=stream"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiScheme=http"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiHost=crowdsec:8080"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdsecLapiKeyFile=/run/secrets/crowdsec_bouncer_key"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=60"
+        #- "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=60"
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     environment:

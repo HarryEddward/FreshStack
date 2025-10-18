@@ -121,10 +121,6 @@ services:
     #   - "5432:5432"
     networks:
       - traefik-public
-    ports:
-      - target: 5432
-        published: 5432
-        mode: host
     deploy:
       replicas: 1
       # Si necesitas publicar el puerto, usa esto:
@@ -236,6 +232,12 @@ services:
     ports:
       - target: 5434
         published: 5434
+        mode: host
+      - target: 9000
+        published: 9000
+        mode: host
+      - target: 7800
+        published: 7800
         mode: host
     networks:
       - traefik-public
