@@ -18,7 +18,6 @@ services:
   # Redis Master
   redis-master:
     image: bitnami/redis:latest
-    container_name: redis-master
     hostname: redis-master
     secrets:
       - redis_password
@@ -33,7 +32,7 @@ services:
     networks:
       - traefik-public
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -45,7 +44,6 @@ services:
   # Redis Replica (Slave)
   redis-replica:
     image: bitnami/redis:latest
-    container_name: redis-replica
     hostname: redis-replica
     secrets:
       - redis_password
@@ -65,7 +63,7 @@ services:
     depends_on:
       - redis-master
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/REDIS_PASSWORD) ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -77,7 +75,6 @@ services:
   # Redis Sentinel
   redis-sentinel:
     image: bitnami/redis-sentinel:latest
-    container_name: redis-sentinel
     hostname: redis-sentinel
     secrets:
       - redis_password

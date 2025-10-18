@@ -9,7 +9,6 @@ services:
       - "--accesslog=true"
       - "--api.dashboard=true"
       - "--api.insecure=false"
-      - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.watch=true"
       - "--providers.swarm.exposedbydefault=false"
@@ -22,7 +21,6 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
-      - "--global.sendAnonymousUsage=false"
 
       # Habilitar plugins experimentales
       - "--experimental.plugins.crowdsec-bouncer.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
@@ -62,12 +60,11 @@ services:
 
     deploy:
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+        - "traefik.enable=false"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.www.cafebuy.es`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
         - "traefik.http.routers.traefik-dashboard.service=api@internal"
         - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
         - "traefik.http.routers.traefik-dashboard.tls=true"
-        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
         
         # Middlewares de CrowdSec (sin cambios)
         - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
