@@ -263,10 +263,20 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            echo "==> Construyendo imagen prelaunch..."
-            cd /home/ubuntu/FreshStack/prelaunch
-            sudo docker build -t cafebuy-prelaunch:latest .
-            echo "✅ Imagen construida exitosamente"
+            # Configuración de imágenes: nombre de imagen y ruta
+            images=(
+              "cafebuy-prelaunch:/home/ubuntu/FreshStack/prelaunch"
+            )
+
+            for img in "${images[@]}"; do
+              name="${img%%:*}"
+              path="${img##*:}"
+              echo "==> Construyendo imagen $name desde $path..."
+              cd "$path"
+              sudo docker build -t "$name:latest" .
+              echo "✅ Imagen $name construida exitosamente"
+            done
+
 
   # Job 5: Redesplegar servicios (MODIFICAR)
   deploy-services:
