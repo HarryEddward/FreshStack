@@ -53,6 +53,9 @@ flowchart TB
         Reverse_Proxy["Reverse Proxy"]
         Persistant_Database["Persistant Database"]
         Cache_Database["Cache Database"]
+        Object_Storage["Object Storage"]
+        Telemetry
+        Metrics
     end
     
 ```

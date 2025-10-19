@@ -283,16 +283,16 @@ services:
     #   - "8186:8186"
     #   - "9000:9000"
     #   - "7800:7800"
-    ports:
-      - target: 8186
-        published: 8186
-        mode: host
-      - target: 9000
-        published: 9000
-        mode: host
-      - target: 7800
-        published: 7800
-        mode: host
+    #ports:
+    #  - target: 8186
+    #    published: 8186
+    #    mode: host
+    #  - target: 9000
+    #    published: 9000
+    #    mode: host
+    #  - target: 7800
+    #    published: 7800
+    #    mode: host
     networks:
       - traefik-public
     deploy:
