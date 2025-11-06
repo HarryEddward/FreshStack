@@ -5,10 +5,10 @@ import { init } from "@config/init.ts";
 
 export default defineConfig({
   server: {
-    cert: await Deno.readTextFile("./certs/cert.pem"),
-    key: await Deno.readTextFile("./certs/key.pem"),
+    //cert: await Deno.readTextFile("./certs/cert.pem"),
+    //key: await Deno.readTextFile("./certs/key.pem"),
     port: 8000,
-    hostname: "10.241.157.225",
+    hostname: "0.0.0.0",
   },
   plugins: [
     tailwind(),

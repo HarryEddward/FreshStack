@@ -72,6 +72,7 @@ export async function build(opts = {
 
 
     const app = Fastify({
+        trustProxy: 'treafik-treafik',
         https: {
             key: fs.readFileSync(path.join(__dirname, './certs/key.pem')),
             cert: fs.readFileSync(path.join(__dirname, './certs/cert.pem'))
@@ -102,7 +103,7 @@ export async function build(opts = {
     })
     app.register(swaggerPlugin);
     app.register(cors, {
-        origin: true, //'https://freshclientapp.ngrok.app',
+        origin: 'www.cafebuy.es',
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
@@ -128,7 +129,7 @@ export async function build(opts = {
     });
     app.decorate('redis_secure', secureRedis);
     app.decorate('prefix_sessions_http', 'http_sessions:');
-    app.register(fastifyRedis, { host: '127.0.0.1', port: 6381, password: 'SECRETPWS', });
+    app.register(fastifyRedis, { host: '127.0.0.1', port: 6381, password: 'SECRETPWS' });
 
     //app.addHook('onRequest', authTesting);
 

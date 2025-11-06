@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# 🔵 Overview
+# Introduction
 
 
 ## Que trata este proyecto?
@@ -49,17 +49,18 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 - API: **Fastify + Zenstack (Fastify Generator API CRUD + RBAC Auth Adapter for Prisma)**
 - Infrastructure Multimedia Storage: **SeaweedFS (Instancia S3)**
 - Persistant Database (HA): **PostgreSQL / repmgr / pgbouncer**
-- CI/CD Gestión Nodos Escalvos Docker Swarm: **Jenkins**
+- CD Gestión Nodos Escalvos Docker Swarm: **Jenkins**
 - CI/CD Gestión Nodos Maestros de Docker Swarm como en Producción / Testeo para Producción: **Github Actions**
 - Server: **Fresh (Deno) (Frontend & Backend)**
 - ORM: **Prisma**
+- Registrador de imagenes privado: **Docker**
 - Testing: **Deno**
 - Métricas: **cAdvisor / Promethus / Grafana**
-- Contenedores: **Docker (Imágenes: Bitnami)**
+- Contenedores: **Imagenes oficiales en Docker / Imagenes Bitnami Docker**
 - Orquestador de contenedores: **Docker Swarm**
-- Cache Database: **Redis (Redis Cluster / Redis Sentinel)**
+- Cache Database: **Redis Server / Redis Cluster / Redis Sentinel**
 - Docs: **Docosaurus**
-- Client Payment: **Stripe / Tap To Pay (SDK)**
+- Client Payment: **Stripe: Tap To Pay (SDK) BC2C* / Suscription B2B** *Business Client to Client (Consumer)
 - Business Payment: **Stripe**
 - Reverse Proxy: **Treafik**
 - Third-Party Multimedia Exporter: **Google Drive**
@@ -67,7 +68,7 @@ Se enfoca en un **sistema de microservcios auto-hospedado** con técnologías mo
 - Generación de informes en PDF's: **LaTeX**
 - Aplicación móvil para el Cliente: **Capacitor (SSR Embded)**
 - Aplicación móvil para el Empleado: **React Native Expo**
-- OWASP: **Traefik Modsecurity Plugin**
+- OWASP: **Traefik Crowsec Plugin**
 - Automatize Installation Servers: **Ansible**
 
 ### Aspectos ténicos de Escalamiento Horizontal (HS)

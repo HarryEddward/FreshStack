@@ -1,0 +1,51 @@
+# Etapa de build
+FROM denoland/deno:alpine-1.41.2 AS builder
+
+# Instalar Node.js y PNPM
+RUN apk add --no-cache nodejs npm
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY deno.json deno.lock* import_map.json* ./
+COPY package.json pnpm-lock.yaml* ./
+
+# Cachear dependencias de Deno
+RUN deno cache --lock=deno.lock main.ts || deno cache main.ts
+
+# Instalar dependencias de Node
+RUN pnpm install --frozen-lockfile
+
+# Copiar resto del código
+COPY . .
+
+# Etapa final
+FROM denoland/deno:alpine-1.41.2
+
+# Instalar Node.js y PNPM
+RUN apk add --no-cache nodejs npm curl
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# Copiar dependencias desde builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.deno ./deno
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml* ./
+
+# Copiar código fuente
+COPY . .
+
+EXPOSE 8000
+
+# Script para iniciar con dependencias ya instaladas
+COPY --chmod=755 <<EOF /app/start.sh
+#!/bin/sh
+# Si necesitas instalar algo adicional (raro en producción)
+# pnpm install --production --frozen-lockfile 2>/dev/null || true
+exec deno task start
+EOF
+
+CMD ["/app/start.sh"]

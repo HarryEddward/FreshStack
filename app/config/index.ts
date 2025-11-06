@@ -1,79 +1,99 @@
+// config.ts
 import { load } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
-import Stripe from 'stripe';
-import { createClient } from "redis";
-import { init } from "./init.ts";
 import { getRedisClient } from '@config/redisClient.ts';
 
 await load({ envPath: "../.env", export: true });
 
-// Validaciones y helpers
-const required = (value: string | undefined, name: string): string => {
-  if (!value) {
-    throw new Error(`❌ Missing required environment variable: ${name}`);
-  }
-  return value;
+// ============================================
+// UTILIDADES INTERNAS
+// ============================================
+const env = {
+  required: (name: string): string => {
+    const value = Deno.env.get(name);
+    if (!value) throw new Error(`❌ Missing required environment variable: ${name}`);
+    return value;
+  },
+  get: (name: string, defaultValue = ""): string => 
+    Deno.env.get(name) || defaultValue,
+  number: (name: string, defaultValue: number): number => 
+    Number(Deno.env.get(name) || defaultValue),
+  boolean: (name: string, defaultValue = false): boolean => 
+    Deno.env.get(name) === "true" || defaultValue,
 };
 
-//const stripeSecretKey = new Stripe(Deno.env.get("API_KEY_STRIPE") || "");
+const buildUrl = (ssl: boolean, host: string, port?: string | number) => 
+  `${ssl ? "https" : "http"}://${host}${port ? ':' + port : ''}`;
 
-const mainApiConfigPort = Number(Deno.env.get("API_CONFIG_PORT")) || 3800;
-const mainApiConfigHost = Deno.env.get("API_CONFIG_HOST") || "localhost";
-const mainApiConfigSSL = Deno.env.get("API_CONFIG_SSL") === "true" || false;
-const mainApiVersion = Deno.env.get("API_CONFIG_VERSION") || "v1";
+// ============================================
+// CARGA DE VARIABLES BASE
+// ============================================
+// Variables centralizadas que se derivan a las específicas
+const appHost = env.get("APP_HOST", "localhost");
+const appDomain = env.get("APP_DOMAIN", "localhost");
+const appSSL = env.boolean("APP_SSL");
 
-const backendApiConfigPort = Deno.env.get("BACKEND_CONFIG_PORT");
-const backendApiConfigHost = Deno.env.get("BACKEND_CONFIG_HOST") || "localhost";
-const backendApiConfigSSL = Deno.env.get("BACKEND_CONFIG_SSL") === "true" || false;
+// ============================================
+// VARIABLES DE CONFIGURACIÓN
+// Fallback a las centralizadas si no existen las específicas
+// ============================================
+const mainApiConfigPort = env.number("MAIN_API_PORT", env.number("API_CONFIG_PORT", 3800));
+const mainApiConfigHost = env.get("API_CONFIG_HOST", appHost);
+const mainApiConfigSSL = env.boolean("API_CONFIG_SSL", appSSL);
+const mainApiVersion = env.get("API_CONFIG_VERSION", "v1");
 
+const backendApiConfigPort = Deno.env.get("BACKEND_API_PORT") || Deno.env.get("BACKEND_CONFIG_PORT");
+const backendApiConfigHost = env.get("BACKEND_CONFIG_HOST", appHost);
+const backendApiConfigSSL = env.boolean("BACKEND_CONFIG_SSL", appSSL);
 
-const keycloakEndpoint = /*Deno.env.get("KEYCLOAK_ENDPOINT") ||*/ "http://10.241.157.225:8186";
-const keycloakSubdomain = required(Deno.env.get("KEYCLOAK_SERVER_URL"), "KEYCLOAK_SERVER_URL");
-const keycloakConfigSSL = required(Deno.env.get("KEYCLOAK_CONFIG_SSL"), "KEYCLOAK_CONFIG_SSL") === "true" || false;
+const keycloakRealm = env.required("KEYCLOAK_REALM");
+const keycloakEndpoint = env.get("KEYCLOAK_ENDPOINT") || buildUrl(appSSL, appDomain, undefined) + "/auth";
+const keycloakSubdomain = env.get("KEYCLOAK_SERVER_URL") || `${appDomain}/realms/${keycloakRealm}`;
+const keycloakConfigSSL = env.boolean("KEYCLOAK_CONFIG_SSL", appSSL);
 
-
+// ============================================
+// EXPORTACIÓN - ESTRUCTURA IDÉNTICA A LA ORIGINAL
+// ============================================
 export const config = {
-    mainApiConfig: {
-        port: mainApiConfigPort,
-        host: mainApiConfigHost,
-        version: mainApiVersion,
-    },
-    mainApiUrl: `${mainApiConfigSSL ? "https" : "http"}://${mainApiConfigHost}:${mainApiConfigPort}`,
-    backendApiConfig: {
-        port: backendApiConfigPort,
-        host: backendApiConfigHost,
-        version: mainApiVersion,
-    },
-    /*paymentProvider: {
-        stripeSecretKey,
-    },*/
-    backendApiUrl: `${backendApiConfigSSL ? "https" : "http"}://${backendApiConfigHost}${backendApiConfigPort && ':' + backendApiConfigPort}`,
-    backendApiUrlDeepLink: `${backendApiConfigSSL ? "https" : "http"}://${backendApiConfigHost}`,
-    client_id: Deno.env.get("CLIENT_ID") || "client_id",
-    client_secret: Deno.env.get("CLIENT_SECRET") || "client_secret",
-    session_secret: "4Ft4GmWgvuUY9jRuG7Pxp/IEwzOWKTRRWjdnsDW64NU=", //Deno.env.get("SESSION_SECRET") || "default-secret-please-change", // ¡Cambia esto en producción!
-    keycloakEndpoint,
-    keycloak: {
-        client: {
-            server: {
-                clientId: required(Deno.env.get("KEYCLOAK_CLIENT_SERVER_ID"), 'KEYCLOAK_CLIENT_SERVER_ID'),
-                secret: required(Deno.env.get("KEYCLOAK_CLIENT_SERVER_SECRET"), 'KEYCLOAK_CLIENT_SERVER_SECRET'),
-            },
-            web: {
-                clientId: required(Deno.env.get("KEYCLOAK_CLIENT_WEB_ID"), 'KEYCLOAK_CLIENT_WEB_ID'),
-                secret: required(Deno.env.get("KEYCLOAK_CLIENT_WEB_SECRET"), 'KEYCLOAK_CLIENT_WEB_SECRET'),
-            }
-        },
-        keycloakEndpoint,
-        keycloakSubdomain,
-        
-        appOrigin: required(Deno.env.get("KEYCLOAK_APP_ORIGIN"), "KEYCLOAK_APP_ORIGIN"),
-        realm: required(Deno.env.get("KEYCLOAK_REALM"), "KEYCLOAK_REALM"),
-        issuerUrl: `http://` + keycloakSubdomain + '/.well-known/openid-configuration'
-    }
-};
+  mainApiConfig: {
+    port: mainApiConfigPort,
+    host: mainApiConfigHost,
+    version: mainApiVersion,
+  },
+  mainApiUrl: buildUrl(mainApiConfigSSL, mainApiConfigHost, mainApiConfigPort),
+  
+  backendApiConfig: {
+    port: backendApiConfigPort,
+    host: backendApiConfigHost,
+    version: mainApiVersion,
+  },
+  
+  backendApiUrl: buildUrl(backendApiConfigSSL, backendApiConfigHost, backendApiConfigPort),
+  backendApiUrlDeepLink: buildUrl(backendApiConfigSSL, backendApiConfigHost),
 
+  client_id: env.get("KEYCLOAK_CLIENT_WEB_ID", env.get("KEYCLOAK_CLIENT_WEB_ID", "client_id")),
+  client_secret: env.get("KEYCLOAK_CLIENT_WEB_SECRET", env.get("KEYCLOAK_CLIENT_WEB_SECRET", "client_secret")),
+  session_secret: env.get("SESSION_SECRET", "4Ft4GmWgvuUY9jRuG7Pxp/IEwzOWKTRRWjdnsDW64NU="),
+  
+  keycloakEndpoint,
+  keycloak: {
+    client: {
+      server: {
+        clientId: env.required("KEYCLOAK_CLIENT_SERVER_ID"),
+        secret: env.required("KEYCLOAK_CLIENT_SERVER_SECRET"),
+      },
+      web: {
+        clientId: env.required("KEYCLOAK_CLIENT_WEB_ID"),
+        secret: env.required("KEYCLOAK_CLIENT_WEB_SECRET"),
+      }
+    },
+    keycloakEndpoint,
+    keycloakSubdomain,
+    appOrigin: env.get("KEYCLOAK_APP_ORIGIN") || buildUrl(appSSL, appDomain, mainApiConfigPort),
+    realm: keycloakRealm,
+    issuerUrl: `https://${keycloakSubdomain}/.well-known/openid-configuration`
+  }
+};
 
 export const redisClient = getRedisClient() as import("npm:redis").RedisClientType;
-
 
 console.log(config);

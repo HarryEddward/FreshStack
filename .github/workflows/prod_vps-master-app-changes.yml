@@ -1,0 +1,62 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'app/**'
+    paths-ignore:
+      - 'app/deno.json'
+      - 'app/deno.lock'
+      - 'app/package.json'
+      - 'app/pnpm-lock.yaml'
+      - 'app/pnpm-workspace.yaml'
+      - 'app/import_map.json'
+      - 'app/Dockerfile'
+      - 'app/docker-compose.yml'
+  workflow_dispatch:
+
+
+env:
+  PROJECT_PATH: /home/ubuntu/FreshStack
+  REPO_URL: https://github.com/${{ github.repository }}.git
+
+jobs:
+  # Job 1: Actualizar repositorio en el VPS
+  sync-files:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync repository to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: PROJECT_PATH,REPO_URL
+          script: |
+            set -e
+            echo "==> Sincronizando repositorio..."
+            if [ ! -d "$PROJECT_PATH" ]; then
+              echo "📁 Directorio no existe. Clonando repositorio..."
+              mkdir -p "$(dirname "$PROJECT_PATH")"
+              git clone "$REPO_URL" "$PROJECT_PATH"
+            else
+              echo "📂 Directorio existe. Actualizando..."
+              cd "$PROJECT_PATH"
+              if [ ! -d ".git" ]; then
+                cd ..
+                rm -rf "$PROJECT_PATH"
+                git clone "$REPO_URL" "$PROJECT_PATH"
+              else
+                git stash push -m "Auto-backup $(date)" --include-untracked || true
+                git fetch origin
+                git reset --hard origin/main
+                git clean -fd
+              fi
+            fi
+            echo "✅ Repositorio sincronizado en $PROJECT_PATH"

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  registry:
+    image: registry:2
+    # NO exponemos puertos públicos - solo red overlay interna
+    volumes:
+      - registry-data:/var/lib/registry
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
+    networks:
+      - registry-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  registry-data:
+    driver: local
+
+networks:
+  registry-net:
+    driver: overlay
+    attachable: true
+    internal: false  # Permite salida a internet para pull de imágenes base

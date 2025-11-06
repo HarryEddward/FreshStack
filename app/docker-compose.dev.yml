@@ -1,0 +1,42 @@
+services:
+  fresh-app:
+    image: fresh_framework_deno_server_dev
+    working_dir: /app
+    environment:
+      - DENO_ENV=production
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        # Middleware para headers de seguridad
+        - "traefik.http.middlewares.fresh-security-headers.headers.customresponseheaders.X-Frame-Options=SAMEORIGIN"
+        - "traefik.http.middlewares.fresh-security-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff"
+        - "traefik.http.middlewares.fresh-security-headers.headers.customresponseheaders.Referrer-Policy=strict-origin-when-cross-origin"
+        
+        # Middleware para stripping de path
+        - "traefik.http.middlewares.fresh-app-strip.stripprefix.prefixes=/fresh"
+        
+        # Ruta principal
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.routers.fresh-app.rule=Host(`www.cafebuy.es`) && PathPrefix(`/fresh`)"
+        - "traefik.http.routers.fresh-app.entrypoints=websecure"
+        - "traefik.http.routers.fresh-app.tls=true"
+        - "traefik.http.routers.fresh-app.service=fresh-app"
+        - "traefik.http.routers.fresh-app.middlewares=fresh-app-strip,fresh-security-headers"
+        
+        # Servicio
+        - "traefik.http.services.fresh-app.loadbalancer.server.port=8000"
+        - "traefik.http.services.fresh-app.loadbalancer.server.scheme=http"
+    command: sh -c "deno task start"
+    volumes:
+      - ./:/app
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true

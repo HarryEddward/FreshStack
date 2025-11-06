@@ -3,7 +3,52 @@ name: Deploy to VPS
 on:
   push:
     branches: ["main"]
+    paths:
+      # Archivos de configuración que requieren rebuild a la app
+      - 'app/deno.json'
+      - 'app/deno.lock'
+      - 'app/package.json'
+      - 'app/pnpm-lock.yaml'
+      - 'app/pnpm-workspace.yaml'
+      - 'app/import_map.json'
+      - 'app/Dockerfile'
+      - 'app/docker-compose.yml'
+
+      # Archivos de configuración que requieren rebuild a la api
+      - 'api/package.json'
+      - 'api/package-lock.json'
+      - 'api/tsconfig.json'
+      - 'api/Dockerfile'
+      - 'api/docker-compose.yml'
+
+      # Cualquier cambio fuera de app o la api
+      - '.github/**'
+      - 'ansible/**'
+      - 'api/**'
+      - 'configs/**'
+      - 'jenkins/**'
+      - 'keycloakify/**'
+      - 'metrics/**'
+      - 'postgresql/**'
+      - 'prelaunch/**'
+      - 'redis/**'
+      - 'registry/**'
+      - 'seaweedfs/**'
+      - 'telemetry/**'
+      - 'traefik/**'
+      
+      - '*.yml'
+      - '*.yaml'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+    paths-ignore:
+      - 'docs/**'
+      - 'expo/**'
+      - 'm̶i̶n̶i̶o̶/**'
+      - 'cli/**'
+      - '.vscode/**'
   workflow_dispatch:
+
 
 env:
   PROJECT_PATH: /home/ubuntu/FreshStack
@@ -12,7 +57,7 @@ env:
 jobs:
   # Job 1: Actualizar repositorio en el VPS
   sync-repository:
-    if: true
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

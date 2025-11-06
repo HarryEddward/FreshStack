@@ -1,10 +1,9 @@
 
 services:
   fastify-internal:
-    image: fastify_api_server
+    image: node:20-alpine
+    working_dir: /app
     deploy:
-      mode: replicated
-      replicas: 2
       restart_policy:
         condition: on-failure
       labels:
@@ -19,6 +18,14 @@ services:
 
     #ports:
     #  - "8300:8300"
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./prisma:/app/prisma
+      - ./node_modules:/app/node_modules
     networks:
       - fresh_framework_network
 
